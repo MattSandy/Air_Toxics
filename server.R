@@ -11,8 +11,8 @@ options("digits"=4)
 #site="minneapolis, mn"
 #a= get_map(location = site, zoom = 12, color="bw", source = "osm")
 
-#toxics<-read.csv(file="summary2002_12.csv", header=T, stringsAsFactors=F, nrows=7000 )
-load("summary2002_12.rda")
+toxics<-read.csv(file="summary2002_12.csv", header=T, stringsAsFactors=F, nrows=7000 )
+#load("summary2002_12.rda")
 toxics=na.omit(toxics)
 pol_list<-levels(as.factor(toxics$Pollutant))
 
