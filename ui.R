@@ -36,7 +36,7 @@ shinyUI(pageWithSidebar(
           value=c(2007, 2012),  format="####", step=1),
             
     br(),
-    submitButton(text = "Submit")
+    #submitButton(text = "Submit")
     
   ),
   
