@@ -28,16 +28,16 @@ shinyServer(function(input, output) {
   
   # Create a summary Table
   output$view <- renderTable({
-    dataset <- toxics
-    dataset <- subset(dataset, Pollutant == input$pollutant)
+    #dataset <- toxics
+    #dataset <- subset(dataset, Pollutant == input$pollutant)
     #dataset <- subset(dataset, RegionName == input$region)
-    dataset <- na.omit(dataset)
-    dataset <- dataset[dataset$year >= input$years[1] & dataset$year <= input$years[2],]
-    head(dataset, n=8)
+    #dataset <- na.omit(dataset)
+    #dataset <- dataset[dataset$year >= input$years[1] & dataset$year <= input$years[2],]
+    head(dataset(), n=10)
   })
   
   output$plot <- renderPlot({
-    data <- dataset()
+    #data <- dataset()
     a<-ggplot(data=dataset(), aes(x=reorder(groupid2, year), y=km_mean, fill=factor(year)), position="dodge")
     theme_update(axis.text.x = element_text(size =13.5, angle = 90, hjust = 2, vjust = .3, lineheight = 1, colour="black"), panel.grid.major = element_line(colour = "grey92"), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.ticks = element_blank(), legend.position = "top")
     b=a + geom_bar(stat="identity") + geom_errorbar( aes(ymax=km_UCL, ymin=km_mean), color="gray", position="dodge") + labs( x = "Site ID", y = paste(input$pollutant, "Concentration"), title= paste(input$pollutant, "Concentration"), fill= "") + guides(color=F, fill = guide_legend(reverse=F)) + scale_x_discrete(labels=paste(dataset()$MPCAID,".", dataset()$poc, sep=""))
