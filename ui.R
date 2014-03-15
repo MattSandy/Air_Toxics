@@ -35,7 +35,7 @@ shinyUI(pageWithSidebar(
     sliderInput('years', '', min=2002, max=2012,
           value=c(2007, 2012),  format="####", step=1),
             
-    br(),
+    br()
     #submitButton(text = "Submit")
     
   ),
