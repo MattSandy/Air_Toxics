@@ -43,8 +43,9 @@ shinyUI(pageWithSidebar(
   # Show 3 tabs: chart, map and summary of the dataset
   mainPanel(
     tabsetPanel(
-      tabPanel("Monitor Map", plotOutput("map")), 
+       
       tabPanel("Graph", plotOutput("plot")),
+      tabPanel("Monitor Map", plotOutput("map")),
       tabPanel("Data Summary", tableOutput("view"))
                 )  
             )
