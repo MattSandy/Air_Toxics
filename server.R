@@ -7,7 +7,6 @@ library(ggplot2)
 
 options("digits"=4)
 
-
 #site="minneapolis, mn"
 #a= get_map(location = site, zoom = 12, color="bw", source = "osm")
 
@@ -25,16 +24,15 @@ shinyServer(function(input, output) {
          toxics[toxics$Pollutant == input$pollutant & toxics$year >= input$years[1] & toxics$year <= input$years[2],]
                       })
   
+  #Generate Pollutant List
+  output$pollutants <- renderUI({
+      selectInput("pollutant", "", choices = c("Formaldehyde", pol_list) )})
   
-  # Create a summary Table
-  output$view <- renderTable({
-    #dataset <- toxics
-    #dataset <- subset(dataset, Pollutant == input$pollutant)
-    #dataset <- subset(dataset, RegionName == input$region)
-    #dataset <- na.omit(dataset)
-    #dataset <- dataset[dataset$year >= input$years[1] & dataset$year <= input$years[2],]
-    head(dataset(), n=10)
-  })
+  
+  # Generate a summary of the dataset
+  #output$summary <- renderPrint({
+    #summary(dataset())
+  #})
   
   output$plot <- renderPlot({
     #data <- dataset()
