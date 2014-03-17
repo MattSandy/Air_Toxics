@@ -26,7 +26,7 @@ shinyServer(function(input, output) {
   
   #Generate Pollutant List
   output$pollutants <- renderUI({
-      selectInput("pollutant", "", choices = c("Formaldehyde", pol_list) )})
+      selectInput("pollutant", "", choices = pol_list, selected = "Formaldehyde" )})
   
   
   # Generate a summary of the dataset
