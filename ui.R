@@ -24,7 +24,7 @@ shinyUI(pageWithSidebar(
     
      br(), h4("Pollutant:"),
      selectInput("pollutant", "",
-                 choices = c("Formaldehyde", pol_list)),
+                 choices = c('Formaldehyde', '1,2,4-Trimethylbenzene','1,3-Butadiene','1,3,5-Trimethylbenzene','1,4-Dichlorobenzene','2-Proponol','Acetaldehyde','Acetone','Antimony (Tsp) Stp','Arsenic (Tsp) Stp','Barium (Tsp) Stp','Benzaldehyde','Benzene','Benzene, 1-Ethenyl-4-Methyl','Bromomethane','Butyraldehyde','Cadmium (Tsp) Stp','Carbon Disulfide','Carbon Tetrachloride','Chlorobenzene','Chloroethane','Chloroform','Chloromethane','Chromium (Tsp) Stp','Cobalt (Tsp) Stp','Cyclohexane','Dichlorodifluoromethane','Dichloromethane','Ethylbenzene','Formaldehyde','Freon 113','Freon 114','Furan, Tetrahydro-','Iron (Tsp) Stp','M/P Xylene','Manganese (Tsp) Stp','Methyl Butyl Ketone','Methyl Chloroform','Methyl Ethyl Ketone','N-Heptane','N-Hexane','Nickel (Tsp) Stp','O-Xylene','Propionaldehyde','Propylene','Selenium (Tsp) Stp','Styrene','Tetrachloroethylene','Toluene','Trans-Crotonaldehyde','Trichloroethylene','Trichlorofluoromethane','Vinyl Acetate','Zinc (Tsp) Stp')),
                 
     
     br(),h4("Region:"),
