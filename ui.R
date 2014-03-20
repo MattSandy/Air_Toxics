@@ -1,7 +1,7 @@
 #Create chart, map, and summary of chosen Air Toxics data,  ui.R
 
 library(shiny)
-
+warn=-1
 # Define UI for viewer app
 shinyUI(pageWithSidebar(
   
@@ -16,40 +16,49 @@ shinyUI(pageWithSidebar(
       tags$style(type="text/css", "select { max-width: 200px; }"),
       tags$style(type="text/css", ".jslider { max-width: 200px; }"),
       tags$style(type='text/css', ".well { max-width: 250px; }"),
-      tags$style(type='text/css', ".span4 { max-width: 310px; }")
-              ),
+      tags$style(type='text/css', ".span4 { max-width: 260px; }")
+      
+    ),
     
-    img(src="https://familysearch.org/learn/wiki/en/images/2/2a/Minnesota-county-map.gif", style = "width: 70%; margin-left: 30px;
-    margin-right: 0"),
+    img(src="https://familysearch.org/learn/wiki/en/images/2/2a/Minnesota-county-map.gif", style = "width: 70%; margin-left: 30px; margin-right: 0"),
     
-     br(), h4("Pollutant:"),
-     uiOutput("pollutants"),
+    br(), h4("Pollutant:"),
+    uiOutput("pollutants"),
     
     #selectInput("pollutant", "",
     #  choices = c('Formaldehyde', '1,2,4-Trimethylbenzene','1,3-Butadiene','1,3,5-Trimethylbenzene','1,4-Dichlorobenzene','2-Proponol','Acetaldehyde','Acetone','Antimony (Tsp) Stp','Arsenic (Tsp) Stp','Barium (Tsp) Stp','Benzaldehyde','Benzene','Benzene, 1-Ethenyl-4-Methyl','Bromomethane','Butyraldehyde','Cadmium (Tsp) Stp','Carbon Disulfide','Carbon Tetrachloride','Chlorobenzene','Chloroethane','Chloroform','Chloromethane','Chromium (Tsp) Stp','Cobalt (Tsp) Stp','Cyclohexane','Dichlorodifluoromethane','Dichloromethane','Ethylbenzene','Formaldehyde','Freon 113','Freon 114','Furan, Tetrahydro-','Iron (Tsp) Stp','M/P Xylene','Manganese (Tsp) Stp','Methyl Butyl Ketone','Methyl Chloroform','Methyl Ethyl Ketone','N-Heptane','N-Hexane','Nickel (Tsp) Stp','O-Xylene','Propionaldehyde','Propylene','Selenium (Tsp) Stp','Styrene','Tetrachloroethylene','Toluene','Trans-Crotonaldehyde','Trichloroethylene','Trichlorofluoromethane','Vinyl Acetate','Zinc (Tsp) Stp')),
+        
+    h4("Region:"),
+    selectInput("region", "", choices = c("All", "Metro", "North"), selected ="All"),
     
-    br(),h4("Region:"),
-    selectInput("region", "", choices = c("Minnesota", "Metro", "North")),
-    
+    br(), h4("Site ID:"),
+    uiOutput("siteids"),
     
     br(),h4("Years:"),
-    sliderInput('years', '', min=2002, max=2012,
-          value=c(2007, 2010),  format="####", step=1),
-            
+    sliderInput("years", "", min=2002, max=2012, value=c(2008, 2011),  format="####", step=1),
+    
     br()
     #submitButton(text = "Submit")
     
-  ),
+    ),
   
   # Show 3 tabs: chart, map and summary of the dataset
   mainPanel(
+    tags$head(
+        tags$style(type='text/css', ".span8 { margin-left: 0px; padding-left: 20px; }")
+        #tags$style(type='text/css', ".tabbable {  margin-left: -20px; padding-left: -10px; }"),
+        #tags$style(type='text/css', ".nav nav-tabs { margin-left: -20px; padding-left: -10px; }"),
+        #tags$style(type='text/css', ".tab-content { margin-left: -20px; padding-left: -10px; }"),
+        #tags$style(type='text/css', ".tab-pane { margin-left: - 20px;padding-left: -10px; }")
+      
+    ),
     tabsetPanel(
-       
-      tabPanel("Graph", plotOutput("plot")),
-      tabPanel("Monitor Map", plotOutput("map")),
-      tabPanel("Data Summary", tableOutput("view"))
-                )  
-            )
+      
+      tabPanel("Graph Results", plotOutput("plot", width = "100%", height = 510)),
+      tabPanel("Monitor Map", plotOutput("map", width = "100%", height = 520)),
+      tabPanel("Data Summary", dataTableOutput("table"))
+    )  
+  )
   
   
 ))
