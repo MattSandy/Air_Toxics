@@ -1,64 +1,66 @@
 #Create chart, map, and summary of chosen Air Toxics data,  ui.R
+#library(shiny)
+library(ggplot2)
 
-library(shiny)
-warn=-1
-# Define UI for viewer app
-shinyUI(pageWithSidebar(
+shinyUI(fluidPage(
+  tags$head(
+    tags$style(type="text/css", "label.radio { display: inline-block; }", ".radio input[type=\"radio\"] { float: none; }"),
+    tags$style(type="text/css", "select { max-width: 100px; }"),
+    tags$style(type="text/css", ".jslider { max-width: 250px; }"),
+    tags$style(type='text/css', ".well { max-width: 250px; }"),
+    tags$style(type='text/css', ".span4 { max-width: 260px; }")
+  ),
   
   #Title
   headerPanel("Monitor Data 2002-2012: Air Toxics"),
+  #Title
+  title = "Monitor Data 2002-2012: Air Toxics",
   
-  # Sidebar with controls to select a dataset and specify the number of observations to view
-  
-  sidebarPanel(
-    tags$head(
-      tags$style(type="text/css", "label.radio { display: inline-block; }", ".radio input[type=\"radio\"] { float: none; }"),
-      tags$style(type="text/css", "select { max-width: 200px; }"),
-      tags$style(type="text/css", ".jslider { max-width: 200px; }"),
-      tags$style(type='text/css', ".well { max-width: 250px; }"),
-      tags$style(type='text/css', ".span4 { max-width: 260px; }")
-      
+  fluidRow(
+    column(3,
+           #br(),
+           h4("Pollutant:"),
+           uiOutput("pollutants")
+           #img(src="https://familysearch.org/learn/wiki/en/images/2/2a/Minnesota-county-map.gif", style = "width: 75%; margin-left: 30px; margin-right: 0")
+    ),
+    column(3,
+           #br(),    
+           h4("Years:"),
+           uiOutput("yearRange")
+           
+    ),
+    column(3,
+           #br(),           
+           h4("Region:"),
+           uiOutput("regions")     
     ),
     
-    img(src="https://familysearch.org/learn/wiki/en/images/2/2a/Minnesota-county-map.gif", style = "width: 70%; margin-left: 30px; margin-right: 0"),
-    
-    br(), h4("Pollutant:"),
-    uiOutput("pollutants"),
-    
-    #selectInput("pollutant", "",
-    #  choices = c('Formaldehyde', '1,2,4-Trimethylbenzene','1,3-Butadiene','1,3,5-Trimethylbenzene','1,4-Dichlorobenzene','2-Proponol','Acetaldehyde','Acetone','Antimony (Tsp) Stp','Arsenic (Tsp) Stp','Barium (Tsp) Stp','Benzaldehyde','Benzene','Benzene, 1-Ethenyl-4-Methyl','Bromomethane','Butyraldehyde','Cadmium (Tsp) Stp','Carbon Disulfide','Carbon Tetrachloride','Chlorobenzene','Chloroethane','Chloroform','Chloromethane','Chromium (Tsp) Stp','Cobalt (Tsp) Stp','Cyclohexane','Dichlorodifluoromethane','Dichloromethane','Ethylbenzene','Formaldehyde','Freon 113','Freon 114','Furan, Tetrahydro-','Iron (Tsp) Stp','M/P Xylene','Manganese (Tsp) Stp','Methyl Butyl Ketone','Methyl Chloroform','Methyl Ethyl Ketone','N-Heptane','N-Hexane','Nickel (Tsp) Stp','O-Xylene','Propionaldehyde','Propylene','Selenium (Tsp) Stp','Styrene','Tetrachloroethylene','Toluene','Trans-Crotonaldehyde','Trichloroethylene','Trichlorofluoromethane','Vinyl Acetate','Zinc (Tsp) Stp')),
-        
-    h4("Region:"),
-    selectInput("region", "", choices = c("All", "Metro", "North"), selected ="All"),
-    
-    br(), h4("Site ID:"),
-    uiOutput("siteids"),
-    
-    br(),h4("Years:"),
-    sliderInput("years", "", min=2002, max=2012, value=c(2008, 2011),  format="####", step=1),
-    
-    br()
-    #submitButton(text = "Submit")
-    
-    ),
+    column(3,
+           #br(),
+           h4("Site ID:"),
+           uiOutput("siteids")           
+           #submitButton(text = "Submit")      
+    )
+  ),
   
+  hr(),
+    
   # Show 3 tabs: chart, map and summary of the dataset
   mainPanel(
     tags$head(
-        tags$style(type='text/css', ".span8 { margin-left: 0px; padding-left: 20px; }")
-        #tags$style(type='text/css', ".tabbable {  margin-left: -20px; padding-left: -10px; }"),
-        #tags$style(type='text/css', ".nav nav-tabs { margin-left: -20px; padding-left: -10px; }"),
-        #tags$style(type='text/css', ".tab-content { margin-left: -20px; padding-left: -10px; }"),
-        #tags$style(type='text/css', ".tab-pane { margin-left: - 20px;padding-left: -10px; }")
-      
+      tags$style(type='text/css', ".span8 { margin: 0px; padding-left: 0px; padding-right: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tabbable {  margin: 0px; padding-right: 0px; width: 99.7%; }"),
+      tags$style(type='text/css', ".nav nav-tabs {  margin: 0px; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tab-content {  margin: 0px; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tab-pane {  margin-left: auto; margin-top:0; padding: 0px; width: 100%; }")
+     
     ),
-    tabsetPanel(
-      
-      tabPanel("Graph Results", plotOutput("plot", width = "100%", height = 510)),
-      tabPanel("Monitor Map", plotOutput("map", width = "100%", height = 520)),
-      tabPanel("Data Summary", dataTableOutput("table"))
-    )  
-  )
+  tabsetPanel(
+    tabPanel("Graph Results", plotOutput("plot", height = 480)),
+    tabPanel("Monitor Map", plotOutput("map", width= 400, height = 440)),
+    tabPanel("Data Summary", dataTableOutput("table"))
+  
+   ))
   
   
 ))
