@@ -11,7 +11,7 @@ options("digits"= 4)
 #saveRDS(toxics, file="toxics_2013.rds")
 #toxics<- readRDS(file="toxics_2013.rds")
 
-toxics <- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=7000 )
+toxics <- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=6000 )
 hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
 pol_list<-levels(as.factor(toxics$Pollutant))
 
