@@ -1,7 +1,6 @@
-Air_Toxics
+Air Toxics
 ==========
 
-Interactive web App for displaying maps, charts and data tables of Air Data
 
 **To run from R:**
 
