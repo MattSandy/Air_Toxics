@@ -1,17 +1,18 @@
 #Air Toxics server.R
 library(shiny)
-require("grid")
-require("scales")
-library("ggplot2")
+library(grid)
+library(ggplot2)
 library(dplyr)
+library(scales)
 library(rCharts)
-
 options("digits"= 4)
-#options("scipen"= -2)
-#saveRDS(toxics, file="toxics_2013.rds")
-#toxics<- readRDS(file="toxics_2013.rds")
 
-toxics <- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=6000 )
+#options("scipen"= -2)
+#library("shiny", lib.loc="/var/www/shinys/shiny")
+#library("dplyr", lib.loc="/var/www/shinys/dplyr")
+#toxics<- read.csv(file="comb_Toxics_2013.csv", header=T, stringsAsFactors=F, nrows=7000 )
+#saveRDS(toxics, file="toxics_2013.rds")
+toxics<- readRDS(file="toxics_2013.rds")
 hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
 pol_list<-levels(as.factor(toxics$Pollutant))
 
@@ -172,15 +173,12 @@ shinyServer(function(input, output, session) {
       d2 <- group_by(d2, MPCAID) %.% mutate(avg = mean(Conc)) %.% filter(year == year[1])
       nums <- length(unique(d2$avg))
       labs <- if(input$time == "km_mean") c("#081D58","#0088EE", "#44BBCC","#99DDBB","#d9f0a3","#f7fcb9") else c("#67001f","#810f7c", "#88419d","#8c96c6","#9ebcda","#e0ecf4")  
-      #labs <- colz[1:num2]
-      #cuts <- quantile(c(d2$avg, 1.01*max(d2$avg)), c(0,.1,.25,.5,.75,1))
-      cuts <- quantile(c(d2$avg), c(.01,.25,.5,.8,.994))
+      cuts <- quantile(c(d2$avg), c(.01,.25,.5,.8,.995))
       #cuts <- seq(from=.95*min(d2$avg), to=max(d2$avg), (max(d2$avg)-.95*min(d2$avg))/4)
       #cuts2 <- seq(from=.95*min(d2$avg), to=max(d2$avg),(max(d2$avg)-.95*min(d2$avg))/10)
       options(digits=7)
       cuts2 <- quantile(c(d2$avg,.985*min(d2$avg), 1.015*max(d2$avg)), seq(from=0, to=1, 1/30))
-      #for(i in 1:31){if(cuts2[x] %in% cuts2[-x]) cuts2[x] = .5*cuts2[x]}
-      cuts2=sapply(1:31, function(x) ifelse(cuts2[x] %in% cuts2[-c(1:x)], .9999*cuts2[x], cuts2[x]))
+      if(length(cuts2[duplicated(cuts2)])>0) cuts2 = sapply(1:31, function(x) ifelse(cuts2[x] %in% cuts2[-c(1:x)], .9999*cuts2[x], cuts2[x]))
       if(length(cuts2[duplicated(cuts2)])>0) cuts2 = seq(from=.9*min(d2$avg), to=1.05*max(d2$avg),(1.05*max(d2$avg)-.9*min(d2$avg))/30)
       #dat_list <- toJSONArray2(d1, json = F)
       d2$Conc = signif(d2$avg,3)
@@ -200,18 +198,13 @@ shinyServer(function(input, output, session) {
                   pointToLayer =  "#! function(feature, latlng){return L.circleMarker(latlng, {
                   radius: 11, fillColor: feature.properties.fillColor || 'grey',    
                   color: '#000', weight: 1, fillOpacity: 0.88, title: feature.properties.popup }) } !#"                                                               )
-      #legend_vec <- c('#081d58'= signif(cuts[1],2),'#08E'= signif(cuts[2],2), '#4BC'= signif(cuts[3],2), '#9DB'= signif(cuts[4],2), '#edf8b1'= signif(cuts[5],2))
-      #map$legend(position = 'bottomleft', colors = names(legend_vec), labels = as.vector(legend_vec))
       map$legend(position = 'topleft', colors = if(nums==1) labs[1:2] else labs[1:5], labels = as.vector(if(nums==1) c(signif(rev(cuts)[1]*c(1.01,.95),2)) else c(rev(signif(cuts,2)))))
-      #map$set(height=460)
-      #map$printProvider(method= 'GET', url= ' http://path/to/mapfish/print', autoLoad= true, dpi: 90)
       #map$fullScreen(TRUE)
     }
     else{          
       map <- Leaflet$new()
       map$setView(c(46.15, -94.6), zoom = 6)
       map$tileLayer(provider = "Stamen.TonerLite", zoom=8)
-      #map$set(height = 460)
       map$enablePopover(TRUE)
       map$fullScreen(TRUE)
     }
@@ -221,11 +214,21 @@ shinyServer(function(input, output, session) {
   
   output$barplot <- renderPlot({
     
-       if(!is.null(isolate(input$pollutant)) & ifelse(is.null(dataset2()),FALSE, nrow(dataset2())>0) ) { 
-      
-      a <- suppressWarnings(ggplot(data= dataset2(), environment=environment(), aes(x= reorder(groupid2,year), y=dataset2()[,input$time]) ) +                        
-          geom_bar(aes(fill = as.factor(year)), stat="identity") +
-          theme(axis.text.x = element_text(size =12.5, lineheight=1, angle = 55, hjust = unit(.8, "cm"), vjust= unit(.6, "cm"), colour="black"), 
+    if(is.null(isolate(input$pollutant)) | is.null(dataset2()) ) {
+      df <- data.frame()
+      a  <- ggplot(df) + 
+        theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank(),
+              panel.grid = element_blank(), plot.margin = unit(c(0,0,.5,.55), "cm"),
+              panel.margin = unit(c(0,0,0,0), "cm")) +
+              xlim(0, 10) + ylim(0, 10) 
+              }
+      else if(nrow(dataset2())>0) {
+            bar2 <- dataset2()[,c("year","groupid2", "SiteId", input$time, "km_UCL")]
+            names(bar2)[4] <- "Conc"
+            num <-length(unique(bar2$groupid2))
+          a <- suppressWarnings(ggplot(data= bar2, environment=environment(), aes(x= reorder(groupid2,year), y=bar2$Conc) ) +                        
+            geom_bar(aes(fill = as.factor(year)), stat="identity") +
+            theme(axis.text.x = element_text(size = ifelse(num <20, 14, 49/(num^.38)), lineheight=1, angle = 45, hjust = 1, vjust= 1, color="#080808"), 
                          axis.text.y = element_text(size =13.5, face="plain", color = "#383838", hjust= unit(-.25, "cm")), 
                          axis.title.x = element_text(size =13.6, face="bold", vjust=-1.2), 
                          axis.title.y = element_text(angle = 90, size =13.4, face="bold", vjust=-0.1), 
@@ -237,19 +240,18 @@ shinyServer(function(input, output, session) {
                          legend.text = element_text(size=14), legend.key = element_rect(fill=NA, color=NA),
                          legend.background = element_rect(fill=NA, color=NA), legend.position = "top", 
                          legend.title=element_blank(), 
-                #legend.key.height = unit(.09,"cm"), legend.key.width = unit(.8,"cm"), legend.key.size = unit(1.3,"cm"),
-                         plot.margin = unit(c(0,0,.5,.55), "cm"), panel.margin = unit(c(0,0,0,0), "cm")) +          
-          geom_errorbar(aes(ymax=km_UCL*as.numeric(input$time=="km_mean"), ymin=km_mean*as.numeric(input$time=="km_mean")), color="grey55", show_guide=F) +
-          labs( x = "Site ID", y = paste(isolate(input$pollutant), "Concentration (ug/m3)"), title= titlez()  ) +
-          scale_x_discrete(breaks = dataset2()$groupid2, labels=as.numeric(dataset2()$MPCAID), expand = c(0.01, 0.01)) +
-          #scale_x_discrete(labels=paste(dataset2()$MPCAID,".", dataset()$poc, sep="")) 
-          geom_hline(aes(yintercept= risk.1()*risk.is(), colour = "darkred" ), linetype= "dashed", size =1.2, alpha = risk.is()*.7, show_guide=T) +    
-          scale_fill_discrete("year", labels= paste("  ", levels(factor(dataset2()$year)), " "), guide = guide_legend(override.aes=aes(color=NA), keywidth=2.7, keyheight=.8, key.size=unit(4, "cm"), label.position = "bottom", order = 2, hjust= unit(1.25, "cm") ))  +
-          scale_colour_manual("risk", values= "darkred",  labels = risk(), guide = guide_legend(order= 1, keywidth=2.9, label.theme = element_text(color = "darkred", size=14, lineheight=.5, angle=0))) +
-          scale_y_continuous(limits = c(0, max(c(dataset2()[,input$time], dataset2()[,"km_UCL"]) )*1.1)) 
+                         #legend.key.height = unit(.09,"cm"), legend.key.width = unit(.8,"cm"), legend.key.size = unit(1.3,"cm"),
+                         plot.margin = unit(c(0,0,.53,1.55), "cm"), panel.margin = unit(c(0,0,0,0.6), "cm")) +          
+            geom_errorbar(aes(ymax=km_UCL*as.numeric(input$time=="km_mean"), ymin=Conc*as.numeric(input$time=="km_mean")), color="grey55", show_guide=F) +
+            labs( x = "Site ID", y = paste(isolate(input$pollutant), "Concentration (ug/m3)"), title= titlez()  ) +
+            scale_x_discrete(breaks = bar2$groupid2, labels=bar2$SiteId, expand = c(0.01, 0.01)) + 
+            geom_hline(aes(yintercept= risk.1()*risk.is(), colour = "darkred" ), linetype= "dashed", size =1.2, alpha = risk.is()*.7, show_guide=T) +    
+            scale_fill_discrete("year", labels= paste("  ", levels(factor(bar2$year)), " "), guide = guide_legend(override.aes=aes(color=NA), keywidth=2.7, keyheight=.8, key.size=unit(4, "cm"), label.position = "bottom", order = 2, hjust= unit(1.25, "cm") ))  +
+            scale_colour_manual("risk", values= "darkred",  labels = risk(), guide = guide_legend(order= 1, keywidth=2.9, label.theme = element_text(color = "darkred", size=14, lineheight=.5, angle=0))) +
+            scale_y_continuous(limits = c(0, max(c(bar2$Conc, bar2$km_UCL))*1.1)) 
           )
    }     
-   else {
+   else{
       df <- data.frame()
       a  <- ggplot(df) + 
             theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank(),
@@ -272,33 +274,34 @@ shinyServer(function(input, output, session) {
       h1$xAxis(title = list(text=""), labels = list(enabled=F), tickLength=0, lineWidth=0)
       h1$yAxis(title = list(text = ""))
       h1$legend(enabled=F)
-      h1$chart(height=470, spacingLeft=5, marginBottom=45, marginRight=0, spacingRight=0)
+      h1$chart(height=450, spacingLeft=5, marginBottom=45, marginRight=0, spacingRight=0)
       
     }
     else if(nrow(dataset2())>0){
        trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
        counts <- group_by(trend2, MPCAID) %.% summarise(count = length(MPCAID))
        if(length(unique(trend2$MPCAID)) > 7) trend2 <- trend2[trend2$MPCAID %in% counts[counts$count >1,1], ] 
-       if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()
-       trend2[,input$time] <- signif(trend2[,input$time], digits=3)
-       h1 <- hPlot(x="year", y = input$time, type="line", data = trend2, group="SiteId", radius=4.2)
+       if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
+       names(trend2)[4] <- "Conc"
+       trend2$Conc <- signif(trend2$Conc, digits=3)
+       h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId", radius=4.2)
          h1$addParams(dom = 'trends')
          h1$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
          h1$xAxis(categories = unique(trend2$year), title = list(style=list(fontSize="13px"), text="Year"), type="category")
-         h1$yAxis(plotLines=list(list(zIndex=1, value=risk.1()*risk.is(), color="darkred", width=2*risk.is(), dashStyle="shortdash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="darkred")))), min = 0.95*min(trend2[,input$time]), max = 1.05*max(trend2[,input$time]), ceiling = 100, title = list(style=list(fontSize="13px"), text = "Concentration (ug/m3)"))
-         h1$chart(height=470, spacingLeft=5,spacingTop=0, marginBottom=50, marginRight=0, spacingRight=0)
+         h1$yAxis(plotLines=list(list(zIndex=1, value=risk.1()*risk.is(), color="darkred", width=2*risk.is(), dashStyle="shortdash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="darkred")))), min = 0.95*min(trend2$Conc), max = 1.05*max(trend2$Conc), ceiling = 100, title = list(style=list(fontSize="13px"), text = "Concentration (ug/m3)"))
+         h1$chart(height=450, spacingLeft=5, spacingTop=0, marginBottom=50, marginRight=0, spacingRight=0)
          h1$legend(margin=8, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10, width=770)
          h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
          h1$subtitle(y=40, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text=risk())
          h1$plotOptions(series=list(shadow=T, data= list(3)), pointStart= 2002, pointInterval=1)
     }     
     else {df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
-          suppressWarnings(h1 <- hPlot(x="Year", y = "km_mean", type="line", data = df))
+          suppressWarnings(h1 <- hPlot(x="Year", y = "Average Concentration", type="line", data = df))
           h1$addParams(dom = 'trends')
           h1$xAxis(title = list(style=list(fontSize="13px"), text="Year"), type="category", categories = df$Year, min =2002, max=2013)
           h1$yAxis(min = 0, ceiling = 10, title = list(style=list(fontSize="13px"), text = paste(isolate(input$pollutant), "Concentration (ug/m3)")))
           h1$legend(enabled=F)
-          h1$chart(height=470, spacingLeft=5, marginBottom=45, marginRight=0, spacingRight=0, plotBackgroundColor= "#E8E8E8")
+          h1$chart(height=450, spacingLeft=5, marginBottom=45, marginRight=0, spacingRight=0, plotBackgroundColor= "#E8E8E8")
           h1$title(style= list(color="red"), text = "No data available for this selection.")
           h1$subtitle(text = "Try selecting additional years.")        
     }
