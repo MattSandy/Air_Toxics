@@ -8,11 +8,10 @@ library(shiny)
 
 options("digits"= 4)
 
-#library("shiny", lib.loc="/var/www/shinys/shiny")
-#library("dplyr", lib.loc="/var/www/shinys/dplyr")
-#toxics<- read.csv(file="comb_Toxics_2013.csv", header=T, stringsAsFactors=F, nrows=7000 )
+
+toxics<- read.csv(file="toxics_2013.csv", header=T, stringsAsFactors=F, nrows=7000 )
 #saveRDS(toxics, file="toxics_2013.rds")
-toxics<- readRDS(file="toxics_2013.rds")
+#toxics<- readRDS(file="toxics_2013.rds")
 hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
 pol_list<-levels(as.factor(toxics$Pollutant))
 
