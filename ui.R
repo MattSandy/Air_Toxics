@@ -1,4 +1,3 @@
-
 #Create chart, map, and summary of chosen Air Toxics data,  ui.R
 #library(shiny)
 #library(ggplot2)
@@ -114,7 +113,7 @@ shinyUI(fluidPage(
   
   fluidRow(
     column(12,  
-           p("*Averages represent the Kaplan-Meier mean. Error bars show the 95% upper confidence limit calculated by bootstrapping. Last updated 4/30/2014.")
+           p("*Averages represent the Kaplan-Meier mean. Error bars extend to the 95% upper confidence limit calculated by bootstrapping. Last updated 4/30/2014.")
            
     ))
   
