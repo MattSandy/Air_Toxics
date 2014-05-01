@@ -1,13 +1,13 @@
 #Air Toxics server.R
-library(shiny)
-library(grid)
-library(ggplot2)
+require("grid")
+require("ggplot2")
+require("scales")
 library(dplyr)
-library(scales)
 library(rCharts)
+library(shiny)
+
 options("digits"= 4)
 
-#options("scipen"= -2)
 #library("shiny", lib.loc="/var/www/shinys/shiny")
 #library("dplyr", lib.loc="/var/www/shinys/dplyr")
 #toxics<- read.csv(file="comb_Toxics_2013.csv", header=T, stringsAsFactors=F, nrows=7000 )
