@@ -6,7 +6,6 @@ Air Toxics
 
 \#require("dplyr")  
 \#require("devtools")  
-
 \#devtools::install_github("shiny", "rstudio")  
 \#devtools::install_github('rCharts', 'ramnathv')  
 
