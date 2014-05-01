@@ -94,18 +94,16 @@ shinyUI(fluidPage(
            tags$style(type='text/css', ".span { margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
            tags$style(type='text/css', ".span6 { height:0px; margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
            tags$style(type='text/css', ".active { margin:auto; margin-top: 0px; margin-bottom: 0px; padding:0px; }"),
-           tags$style(type='text/css', "#map {margin:0;  padding: 0px; margin-top: 0px; height:100%; width:100%; }"),
+           tags$style(type='text/css', "#map {margin:0;  padding: 0px; margin-top: 0px; height:405px; width:100%; }"),
            tags$style(type='text/css', "#title {padding:0;  font-size:17px;  padding-left:12px; margin:0;  margin-top: 1px;}"),
            tags$style(type='text/css', "#risk {color:darkred; font-size:14.5px; font-weight:550; padding:0;  padding-left:12px; margin:0; margin-top: 4px; margin-bottom: 2px;}"),
-           tags$style(type='text/css', ".h5 { margin:0; padding-top:0;  }"),
            tags$style(type='text/css', "h5 { margin:0; padding-top:0;  }"),
-           #tags$style(type='text/css', ".shiny-html-output rChart leaflet{margin:0; padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', "#trends {margin: 0; margin-top: 1px; padding:0; width: 98%;}")
+           tags$style(type='text/css', "#trends {margin: 0; margin-top: 1px; padding:0; width: 98%; height: 460px;}")
           
            ),
     
     tabsetPanel(
-      tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")),mapOutput("map"), tags$style('.leaflet {width: 100%; height:455px;}')),
+      tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")),mapOutput("map"), tags$style('.leaflet {width: 100%; height:405px;}')),
       tabPanel("Trends", showOutput("trends", "highcharts")),
       tabPanel("Bar Charts", plotOutput("barplot", height = 470)),
       tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table"))
@@ -116,7 +114,7 @@ shinyUI(fluidPage(
   
   fluidRow(
     column(12,  
-           p("*These charts and data were produced by the MPCA. The average values represent the Kaplan-Meier mean and error bars show the 95% upper confidence limit calculated by bootstrapping. For additional information or data please contact Joe.Joeson@state.mn.us.")
+           p("*Averages represent the Kaplan-Meier mean. Error bars show the 95% upper confidence limit calculated by bootstrapping. Last updated 4/30/2014.")
            
     ))
   
