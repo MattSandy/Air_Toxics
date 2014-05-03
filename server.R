@@ -224,6 +224,7 @@ shinyServer(function(input, output, session) {
       else if(nrow(dataset2())>0) {
             bar2 <- dataset2()[,c("year","groupid2", "SiteId", input$time, "km_UCL")]
             names(bar2)[4] <- "Conc"
+            bar2[bar2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
             num <-length(unique(bar2$groupid2))
           a <- suppressWarnings(ggplot(data= bar2, environment=environment(), aes(x= reorder(groupid2,year), y=bar2$Conc) ) +                        
             geom_bar(aes(fill = as.factor(year)), stat="identity") +
