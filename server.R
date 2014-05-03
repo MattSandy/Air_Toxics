@@ -284,6 +284,7 @@ shinyServer(function(input, output, session) {
        if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
        names(trend2)[4] <- "Conc"
        trend2$Conc <- signif(trend2$Conc, digits=3)
+       trend2[trend2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
        h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId", radius=4.2)
          h1$addParams(dom = 'trends')
          h1$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
