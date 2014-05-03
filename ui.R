@@ -100,15 +100,14 @@ shinyUI(fluidPage(
           
            ),
     
-     conditionalPanel(
-             condition = "is.null(input.pollutant) == FALSE & output.loaded > 0",
+     
     tabsetPanel(
       tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")),mapOutput("map"), tags$style('.leaflet {width: 100%; height:405px;}')),
       tabPanel("Trends", showOutput("trends", "highcharts")),
       tabPanel("Bar Charts", plotOutput("barplot", height = 470)),
       tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table"))
       
-    )),
+    ),
     
     HTML("<hr noshade size='1'/>") ),
   
