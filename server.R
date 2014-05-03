@@ -24,7 +24,7 @@ shinyServer(function(input, output, session) {
     selectInput("pollutant", "", selected = "Formaldehyde", choices = pol_list ) })
   
    getyearRange <- reactive({
-     ranges <- c(2002,2011)
+     ranges <- c(2002,2013)
     if(!is.null(input$pollutant)) ranges <- range(filter(toxics, Pollutant == input$pollutant)$year)
     ranges
    })
