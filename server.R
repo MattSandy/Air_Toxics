@@ -23,14 +23,14 @@ shinyServer(function(input, output, session) {
   output$pollutants <- renderUI({
     selectInput("pollutant", "", selected = "Formaldehyde", choices = pol_list ) })
   
-   getyearRange <- reactive({
-     ranges <- c(2002,2013)
+  getyearRange <- reactive({
+    ranges <- c(2002,2013)
     if(!is.null(input$pollutant)) ranges <- range(filter(toxics, Pollutant == input$pollutant)$year)
     ranges
-   })
+  })
   
   
-    value_has_not_changed <- reactiveValues(x=0)
+  value_has_not_changed <- reactiveValues(x=0)
   
   in_years <- reactive ({
     years <- c(2002,2004)
@@ -48,12 +48,12 @@ shinyServer(function(input, output, session) {
       newvalue[1] = ifelse(newvalue[1] < getyearRange()[1] | newvalue[1] >= getyearRange()[2], getyearRange()[1], newvalue[1])
       newvalue[2] = ifelse(newvalue[2] > getyearRange()[2] | newvalue[2] <= getyearRange()[1], getyearRange()[2], newvalue[2])
       if(newvalue[1] == slider[1] & newvalue[2] == slider[2]) value_has_not_changed[["x"]] <-  isolate(value_has_not_changed[["x"]]) + 1
-      }
+    }
     
     sliderInput("years", "", min=ranges[1], max= ifelse(ranges[1]==ranges[2],ranges[2]+1,ranges[2]), value=c(newvalue[1], ifelse(ranges[1]==ranges[2],newvalue[2]+1, newvalue[2])),  format="####", step=1)
     
-    })
-
+  })
+  
   
   # Return the requested dataset
   dataset <- reactive({
@@ -64,10 +64,10 @@ shinyServer(function(input, output, session) {
     filter(toxics, Pollutant == pollutant, year >= years[1], year <= years[2])
     
   })
- 
+  
   #Generate Regions List
-    output$regions <- renderUI({
-      selectInput("region", "", selected= "All", choices = c("All", levels(as.factor(dataset()$RegionName)), levels(as.factor(dataset()$County)))) })
+  output$regions <- renderUI({
+    selectInput("region", "", selected= "All", choices = c("All", levels(as.factor(dataset()$RegionName)), levels(as.factor(dataset()$County)))) })
   
   #Filter by region
   dataset1 <- reactive({
@@ -77,15 +77,15 @@ shinyServer(function(input, output, session) {
   
   #Generate Site ID List
   output$siteids <- renderUI({
-     selectInput("siteid", "", selected = "All", choices = c("All", levels(as.factor(dataset1()$SiteId ))))  
-    })
-     
+    selectInput("siteid", "", selected = "All", choices = c("All", levels(as.factor(dataset1()$SiteId ))))  
+  })
+  
   output$download <- downloadHandler(
-       
-       filename = function() { paste("MPCA_Air_Data_2002_2014.csv", sep="") },
-       content = function(con) {
-         toxics = left_join(toxics, hbvs[,c(1,4:7)], by="CAS")
-         write.csv(toxics, con, row.names=F)}
+    
+    filename = function() { paste("MPCA_Air_Data_2002_2014.csv", sep="") },
+    content = function(con) {
+      toxics = left_join(toxics, hbvs[,c(1,4:7)], by="CAS")
+      write.csv(toxics, con, row.names=F)}
   )
   
   dataset2 <- reactive({
@@ -93,30 +93,30 @@ shinyServer(function(input, output, session) {
     filter(dataset1(), siteid2 == "All"| SiteId == siteid2 )  
     #if(nrow(dataset()==0)) return(NULL)
   })
-     
+  
   get_cas <- reactive({
     if(nrow(dataset2())==0) return(NULL)
     dataset2()$CAS[1]
   })
   
   risk.1 <- reactive({
-  
-     if(is.null(get_cas())) return(NULL)
-     if(input$time == "Second_Highest"){min_risk = hbvs[hbvs$CAS == get_cas(),4][1]}
-     else{min_risk = suppressWarnings(min(hbvs[hbvs$CAS == get_cas(),c(6,7)], na.rm=T))}
-     ifelse(min_risk == Inf | is.na(min_risk), 0, min_risk)
+    
+    if(is.null(get_cas())) return(NULL)
+    if(input$time == "Second_Highest"){min_risk = hbvs[hbvs$CAS == get_cas(),4][1]}
+    else{min_risk = suppressWarnings(min(hbvs[hbvs$CAS == get_cas(),c(6,7)], na.rm=T))}
+    ifelse(min_risk == Inf | is.na(min_risk), 0, min_risk)
   })
   
   risk.type <- reactive({
-       
+    
     if(is.null(risk.1())) return(NULL)
     if(input$time == "Second_Highest") ifelse( risk.1() != 0, return("Acute Hazard Index = 1 at "), return("          *No risk value available"))
     
     if(get_cas() == "7440-47-3") return("Assuming 10% as Chromium VI, Cancer Risk = 1 in 100,000 at ")
     
     if(risk.1() != 0) {
-    type = suppressWarnings(which.min(hbvs[hbvs$CAS == get_cas(),c(6,7)] ))
-    ifelse(type == 1, "Cancer Risk = 1 in 100,000 at ", "Non-Cancer Hazard Index = 1 at ")
+      type = suppressWarnings(which.min(hbvs[hbvs$CAS == get_cas(),c(6,7)] ))
+      ifelse(type == 1, "Cancer Risk = 1 in 100,000 at ", "Non-Cancer Hazard Index = 1 at ")
     } else {"          *No risk value available"}
     
   })
@@ -142,21 +142,21 @@ shinyServer(function(input, output, session) {
   risk <- reactive({
     if(is.null(risk.1()) | !nrow(dataset2())> 0) return("Try selecting additional years.")
     paste(risk.type(), units.are(),sep="")
-    })
+  })
   
   output$title <- renderText({
     titlez()
-    })
+  })
   
   output$risk <- renderText({
     risk()
   })
   
   #output$credits <- renderText({
-   # paste("hello",sep="")
+  # paste("hello",sep="")
   #})
   
- #--------------------------------# 
+  #--------------------------------# 
   
   output$map <- renderMap({
     
@@ -164,7 +164,7 @@ shinyServer(function(input, output, session) {
                                                                   map$setView(c(46.15, -94.6), zoom = 6)
                                                                   map$tileLayer(provider = "Stamen.TonerLite", zoom=8)
                                                                   #map$set(width=1150, height = 460) 
-            }
+    }
     
     else if(nrow(dataset2())>0){
       d2 <- dataset2()[,c("year","MPCAID", "lat","long", "SiteId", input$time)]
@@ -197,7 +197,7 @@ shinyServer(function(input, output, session) {
                   pointToLayer =  "#! function(feature, latlng){return L.circleMarker(latlng, {
                   radius: 11, fillColor: feature.properties.fillColor || 'grey',    
                   color: '#000', weight: 1, fillOpacity: 0.88, title: feature.properties.popup }) } !#"                                                               )
-      map$legend(position = 'topleft', colors = if(nums==1) labs[1:2] else labs[1:5], labels = as.vector(if(nums==1) c(signif(rev(cuts)[1]*c(1.01,.95),2)) else c(rev(signif(cuts,2)))))
+      map$legend(position = 'topleft', colors = if(nums==1) labs[2:3] else labs[1:5], labels = as.vector(if(nums==1) c(signif(rev(cuts2)[c(1,31)],2)) else c(rev(signif(cuts,2)))))
       #map$fullScreen(TRUE)
     }
     else{          
@@ -218,49 +218,49 @@ shinyServer(function(input, output, session) {
         theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank(),
               panel.grid = element_blank(), plot.margin = unit(c(0,0,.5,.55), "cm"),
               panel.margin = unit(c(0,0,0,0), "cm")) +
-              xlim(0, 10) + ylim(0, 10) 
-              }
-      else if(nrow(dataset2())>0) {
-            bar2 <- dataset2()[,c("year","groupid2", "SiteId", input$time, "km_UCL")]
-            names(bar2)[4] <- "Conc"
-            bar2[bar2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
-            num <-length(unique(bar2$groupid2))
-          a <- suppressWarnings(ggplot(data= bar2, environment=environment(), aes(x= reorder(groupid2,year), y=bar2$Conc) ) +                        
-            geom_bar(aes(fill = as.factor(year)), stat="identity") +
-            theme(axis.text.x = element_text(size = ifelse(num <20, 14, 49/(num^.38)), lineheight=1, angle = 45, hjust = 1, vjust= 1, color="#080808"), 
-                         axis.text.y = element_text(size =13.5, face="plain", color = "#383838", hjust= unit(-.25, "cm")), 
-                         axis.title.x = element_text(size =13.6, face="bold", vjust=-1.2), 
-                         axis.title.y = element_text(angle = 90, size =13.4, face="bold", vjust=-0.1), 
-                         axis.ticks = element_line(color="grey89"), axis.ticks.length = unit(.2, "cm"),
-                         axis.ticks.margin = unit(0.05, "cm"),
-                         title = element_text(size =14, face="bold"), 
-                         panel.grid.major = element_line(colour = "grey90"), 
-                         panel.grid.minor = element_blank(), panel.background = element_blank(), 
-                         legend.text = element_text(size=14), legend.key = element_rect(fill=NA, color=NA),
-                         legend.background = element_rect(fill=NA, color=NA), legend.position = "top", 
-                         legend.title=element_blank(), 
-                         #legend.key.height = unit(.09,"cm"), legend.key.width = unit(.8,"cm"), legend.key.size = unit(1.3,"cm"),
-                         plot.margin = unit(c(0,0,.53,1.55), "cm"), panel.margin = unit(c(0,0,0,0.6), "cm")) +          
-            geom_errorbar(aes(ymax=km_UCL*as.numeric(input$time=="km_mean"), ymin=Conc*as.numeric(input$time=="km_mean")), color="grey55", show_guide=F) +
-            labs( x = "Site ID", y = paste(isolate(input$pollutant), "Concentration (ug/m3)"), title= titlez()  ) +
-            scale_x_discrete(breaks = bar2$groupid2, labels=bar2$SiteId, expand = c(0.01, 0.01)) + 
-            geom_hline(aes(yintercept= risk.1()*risk.is(), colour = "darkred" ), linetype= "dashed", size =1.2, alpha = risk.is()*.7, show_guide=T) +    
-            scale_fill_discrete("year", labels= paste("  ", levels(factor(bar2$year)), " "), guide = guide_legend(override.aes=aes(color=NA), keywidth=2.7, keyheight=.8, key.size=unit(4, "cm"), label.position = "bottom", order = 2, hjust= unit(1.25, "cm") ))  +
-            scale_colour_manual("risk", values= "darkred",  labels = risk(), guide = guide_legend(order= 1, keywidth=2.9, label.theme = element_text(color = "darkred", size=14, lineheight=.5, angle=0))) +
-            scale_y_continuous(limits = c(0, max(c(bar2$Conc, bar2$km_UCL))*1.1)) 
-          )
-   }     
-   else{
+        xlim(0, 10) + ylim(0, 10) 
+    }
+    else if(nrow(dataset2())>0) {
+      bar2 <- dataset2()[,c("year","groupid2", "SiteId", input$time, "km_UCL")]
+      names(bar2)[4] <- "Conc"
+      bar2[bar2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
+      num <-length(unique(bar2$groupid2))
+      a <- suppressWarnings(ggplot(data= bar2, environment=environment(), aes(x= reorder(groupid2,year), y=bar2$Conc) ) +                        
+                              geom_bar(aes(fill = as.factor(year)), stat="identity") +
+                              theme(axis.text.x = element_text(size = ifelse(num <20, 14, 49/(num^.38)), lineheight=1, angle = 45, hjust = 1, vjust= 1, color="#080808"), 
+                                    axis.text.y = element_text(size =13.5, face="plain", color = "#383838", hjust= unit(-.25, "cm")), 
+                                    axis.title.x = element_text(size =13.6, face="bold", vjust=-1.2), 
+                                    axis.title.y = element_text(angle = 90, size =13.4, face="bold", vjust=-0.1), 
+                                    axis.ticks = element_line(color="grey89"), axis.ticks.length = unit(.2, "cm"),
+                                    axis.ticks.margin = unit(0.05, "cm"),
+                                    title = element_text(size =14, face="bold"), 
+                                    panel.grid.major = element_line(colour = "grey90"), 
+                                    panel.grid.minor = element_blank(), panel.background = element_blank(), 
+                                    legend.text = element_text(size=14), legend.key = element_rect(fill=NA, color=NA),
+                                    legend.background = element_rect(fill=NA, color=NA), legend.position = "top", 
+                                    legend.title=element_blank(), 
+                                    #legend.key.height = unit(.09,"cm"), legend.key.width = unit(.8,"cm"), legend.key.size = unit(1.3,"cm"),
+                                    plot.margin = unit(c(0,0,.53,1.55), "cm"), panel.margin = unit(c(0,0,0,0.6), "cm")) +          
+                              geom_errorbar(aes(ymax=km_UCL*as.numeric(input$time=="km_mean"), ymin=Conc*as.numeric(input$time=="km_mean")), color="grey55", show_guide=F) +
+                              labs( x = "Site ID", y = paste(isolate(input$pollutant), "Concentration (ug/m3)"), title= titlez()  ) +
+                              scale_x_discrete(breaks = bar2$groupid2, labels=bar2$SiteId, expand = c(0.01, 0.01)) + 
+                              geom_hline(aes(yintercept= risk.1()*risk.is(), colour = "darkred" ), linetype= "dashed", size =1.2, alpha = risk.is()*.7, show_guide=T) +    
+                              scale_fill_discrete("year", labels= paste("  ", levels(factor(bar2$year)), " "), guide = guide_legend(override.aes=aes(color=NA), keywidth=2.7, keyheight=.8, key.size=unit(4, "cm"), label.position = "bottom", order = 2, hjust= unit(1.25, "cm") ))  +
+                              scale_colour_manual("risk", values= "darkred",  labels = risk(), guide = guide_legend(order= 1, keywidth=2.9, label.theme = element_text(color = "darkred", size=14, lineheight=.5, angle=0))) +
+                              scale_y_continuous(limits = c(0, max(c(bar2$Conc, bar2$km_UCL))*1.1)) 
+      )
+    }     
+    else{
       df <- data.frame()
       a  <- ggplot(df) + 
-            theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank(),
-                  panel.grid = element_blank(),
-                  plot.margin = unit(c(0,0,.5,.55), "cm"), panel.margin = unit(c(0,0,0,0), "cm")) +
-            xlim(0, 10) + ylim(0, 10) + 
-            geom_text(aes(5,5, label="No data available for this selection.\n Try selecting additional years."), color="red")
-           }
+        theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank(),
+              panel.grid = element_blank(),
+              plot.margin = unit(c(0,0,.5,.55), "cm"), panel.margin = unit(c(0,0,0,0), "cm")) +
+        xlim(0, 10) + ylim(0, 10) + 
+        geom_text(aes(5,5, label="No data available for this selection.\n Try selecting additional years."), color="red")
+    }
     
-      suppressWarnings(print(a))
+    suppressWarnings(print(a))
     
   })
   
@@ -277,23 +277,23 @@ shinyServer(function(input, output, session) {
       
     }
     else if(nrow(dataset2())>0){
-       trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
-       counts <- group_by(trend2, MPCAID) %.% summarise(count = length(MPCAID))
-       if(length(unique(trend2$MPCAID)) > 7) trend2 <- trend2[trend2$MPCAID %in% counts[counts$count >1,1], ] 
-       if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
-       names(trend2)[4] <- "Conc"
-       trend2$Conc <- signif(trend2$Conc, digits=3)
-       trend2[trend2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
-       h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId", radius=4.2)
-         h1$addParams(dom = 'trends')
-         h1$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
-         h1$xAxis(categories = unique(trend2$year), title = list(style=list(fontSize="13px"), text="Year"), type="category")
-         h1$yAxis(plotLines=list(list(zIndex=1, value=risk.1()*risk.is(), color="darkred", width=2*risk.is(), dashStyle="shortdash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="darkred")))), min = 0.95*min(trend2$Conc), max = 1.05*max(trend2$Conc), ceiling = 100, title = list(style=list(fontSize="13px"), text = "Concentration (ug/m3)"))
-         h1$chart(height=450, spacingLeft=5, spacingTop=0, marginBottom=50, marginRight=0, spacingRight=0)
-         h1$legend(margin=8, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10, width=770)
-         h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
-         h1$subtitle(y=40, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text=risk())
-         h1$plotOptions(series=list(shadow=T, data= list(3)), pointStart= 2002, pointInterval=1)
+      trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
+      counts <- group_by(trend2, MPCAID) %.% summarise(count = length(MPCAID))
+      if(length(unique(trend2$MPCAID)) > 7) trend2 <- trend2[trend2$MPCAID %in% counts[counts$count >1,1], ] 
+      if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
+      names(trend2)[4] <- "Conc"
+      trend2$Conc <- signif(trend2$Conc, digits=3)
+      trend2[trend2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
+      h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId", radius=4.2)
+      h1$addParams(dom = 'trends')
+      h1$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
+      h1$xAxis(categories = unique(trend2$year), title = list(style=list(fontSize="13px"), text="Year"), type="category")
+      h1$yAxis(plotLines=list(list(zIndex=1, value=risk.1()*risk.is(), color="darkred", width=2*risk.is(), dashStyle="shortdash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="darkred")))), min = 0.95*min(trend2$Conc), max = 1.05*max(trend2$Conc), ceiling = 100, title = list(style=list(fontSize="13px"), text = "Concentration (ug/m3)"))
+      h1$chart(height=450, spacingLeft=5, spacingTop=0, marginBottom=50, marginRight=0, spacingRight=0)
+      h1$legend(margin=8, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10, width=770)
+      h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
+      h1$subtitle(y=40, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text=risk())
+      h1$plotOptions(series=list(shadow=T, data= list(3)), pointStart= 2002, pointInterval=1)
     }     
     else {df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
           suppressWarnings(h1 <- hPlot(x="Year", y = "Average Concentration", type="line", data = df))
@@ -309,8 +309,8 @@ shinyServer(function(input, output, session) {
     suppressWarnings(return(h1))
     
   })
-
-
+  
+  
   output$table = renderDataTable({
     if(is.null(input$siteid)) return(NULL)
     data<-dataset2()
@@ -324,5 +324,5 @@ shinyServer(function(input, output, session) {
           data[,c(19,22,3,8,9,14,21,13,15,11,12,7,23,17,18,24:27)] }
   }, options= list(bLengthChange=T, aLengthMenu = c(5, 10, 30), iDisplayLength = 5, bFilter=T))
   
-
+  
 })
