@@ -202,7 +202,7 @@ shinyServer(function(input, output, session) {
     }
     else{          
       map <- Leaflet$new()
-      map$setView(c(46.15, -94.6), zoom = 6)
+      map$setView(c(46.15, -94.6), zoom = 7)
       map$tileLayer(provider = "Stamen.TonerLite", zoom=8)
       map$enablePopover(TRUE)
     }
