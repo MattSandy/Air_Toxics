@@ -28,20 +28,20 @@ shinyUI(fluidPage(
   
   fluidRow(
     column(12,
-       headerPanel("Air Toxics Data 2002-2014"),
-       br()
-       #hr(class="hr")
-       
+           headerPanel("Air Toxics Data 2002-2014"),
+           br()
+           #hr(class="hr")
+           
     )),
   
   
   fluidRow(
     column(2,
-       br(),
-       #https://drive.google.com/file/d/0B9Ub5HCtyNmkME55b1FwU3l1NkE/edit?usp=sharing
-       img(src="https://drive.google.com/uc?id=0B9Ub5HCtyNmkME55b1FwU3l1NkE", style = "width: 107%; max-width: 220px; height: 108%; margin: 0px; ")
-       #img(src="https://familysearch.org/learn/wiki/en/images/2/2a/Minnesota-county-map.gif", style = "width: 75%; margin-left: 20px; margin-right: 0;")
-       
+           br(),
+           #https://drive.google.com/file/d/0B9Ub5HCtyNmkME55b1FwU3l1NkE/edit?usp=sharing
+           img(src="https://drive.google.com/uc?id=0B9Ub5HCtyNmkME55b1FwU3l1NkE", style = "width: 107%; max-width: 220px; height: 108%; margin: 0px; ")
+           #img(src="https://familysearch.org/learn/wiki/en/images/2/2a/Minnesota-county-map.gif", style = "width: 75%; margin-left: 20px; margin-right: 0;")
+           
     ),
     
     column(3,
@@ -67,42 +67,42 @@ shinyUI(fluidPage(
            h4("Download:"),
            downloadButton("download", label = "Save Data", class = "download" )
     )
-           
-           
-    ),
-                 
-           fluidRow(
-           column(12, 
-           hr(class="hr")   
-           )),
-           
-           # Show 3 tabs: chart, map and summary of the dataset
-           mainPanel(
-           tags$head(
-           tags$style(type='text/css', ".span8 { margin: 0; margin-bottom:0;  margin-top: 0; padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', ".tabbable {  margin: 0;  padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', ".tabbable tabs-above {  margin: 0;padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', ".nav nav-tabs { margin: 0; padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', ".tab-content {  margin:0; margin-top:-9px;  padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', ".tab-pane {  margin:0; padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', ".tab-pane active {  margin: 0; padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', "#tab-3964-1. {margin: 0; padding: 0px; width: 100%; }"),
-           tags$style(type='text/css', ".checkbox { zindex:5; float=F; margin-top: -5px; margin-left: 9px; padding-bottom: 0px; margin-bottom: 25px;"),
-           tags$style(type='text/css', ".shiny-datatable-output {margin-left: 5px; margin-right:5px; margin-top: 5px; padding-top: 0px; padding-right:0px; width: 99%;}"),
-           tags$style(type='text/css', ".span { margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
-           tags$style(type='text/css', ".span6 { height:0px; margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
-           tags$style(type='text/css', ".active { margin:auto; margin-top: 0px; margin-bottom: 0px; padding:0px; }"),
-           tags$style(type='text/css', "#map {margin:0;  padding: 0px; margin-top: 0px; height:405px; width:100%; }"),
-           tags$style(type='text/css', "#title {padding:0;  font-size:17px;  padding-left:12px; margin:0;  margin-top: 1px;}"),
-           tags$style(type='text/css', "#risk {color:darkred; font-size:14.5px; font-weight:550; padding:0;  padding-left:12px; margin:0; margin-top: 4px; margin-bottom: 2px;}"),
-           tags$style(type='text/css', "h5 { margin:0; padding-top:0;  }"),
-           tags$style(type='text/css', "#trends {margin: 0; margin-top: 1px; padding:0; width: 98%; height: 460px;}")
-          
-           ),
     
-     
+    
+  ),
+  
+  fluidRow(
+    column(12, 
+           hr(class="hr")   
+    )),
+  
+  # Show 3 tabs: chart, map and summary of the dataset
+  mainPanel(
+    tags$head(
+      tags$style(type='text/css', ".span8 { margin: 0; margin-bottom:0;  margin-top: 0; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tabbable {  margin: 0;  padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tabbable tabs-above {  margin:0; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".nav nav-tabs { margin: 0; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tab-content {  margin:0; margin-top:-9px;  padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tab-pane {  margin:0; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".tab-pane active {  margin: 0; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', "#tab-3964-1. {margin: 0; padding: 0px; width: 100%; }"),
+      tags$style(type='text/css', ".checkbox { zindex:5; float=F; margin-top: -5px; margin-left: 9px; padding-bottom: 0px; margin-bottom: 25px;"),
+      tags$style(type='text/css', ".shiny-datatable-output {margin-left: 5px; margin-right:5px; margin-top: 5px; padding-top: 0px; padding-right:0px; width: 99%;}"),
+      tags$style(type='text/css', ".span { margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
+      tags$style(type='text/css', ".span6 { height:0px; margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
+      tags$style(type='text/css', ".active { margin:auto; margin-top: 0px; margin-bottom: 0px; padding:0px; }"),
+      tags$style(type='text/css', "#map {margin:0;  padding: 0px; margin-top: 0px; height:405px; width: 100%; }"),
+      tags$style(type='text/css', "#title {padding:0;  font-size:17px;  padding-left:12px; margin:0;  margin-top: 1px;}"),
+      tags$style(type='text/css', "#risk {color:darkred; font-size:14.5px; font-weight:550; padding:0;  padding-left:12px; margin:0; margin-top: 4px; margin-bottom: 2px;}"),
+      tags$style(type='text/css', "h5 { margin:0; padding-top:0;  }"),
+      tags$style(type='text/css', "#trends {margin: 0; margin-top: 1px; padding:0; width: 98%; height: 460px;}")
+      
+    ),
+    
+    
     tabsetPanel(
-      tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")),mapOutput("map"), tags$style('.leaflet {width: 100%; height:405px;}')),
+      tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")),mapOutput("map"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
       tabPanel("Trends", showOutput("trends", "highcharts")),
       tabPanel("Bar Charts", plotOutput("barplot", height = 470)),
       tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table"))
