@@ -173,7 +173,7 @@ shinyServer(function(input, output, session) {
       d2 <- group_by(d2, MPCAID) %.% mutate(avg = mean(Conc)) %.% filter(year == year[1])
       nums <- length(unique(d2$avg))
       labs <- if(input$time == "km_mean") c("#081D58","#0088EE", "#44BBCC","#99DDBB","#d9f0a3","#f7fcb9") else c("#67001f","#810f7c", "#88419d","#8c96c6","#9ebcda","#e0ecf4")  
-      cuts <- quantile(c(d2$avg), c(.01,.25,.5,.8,.995))
+      cuts <- quantile(c(d2$avg), c(.01,.25,.5,.8,.998))
       #cuts <- seq(from=.95*min(d2$avg), to=max(d2$avg), (max(d2$avg)-.95*min(d2$avg))/4)
       #cuts2 <- seq(from=.95*min(d2$avg), to=max(d2$avg),(max(d2$avg)-.95*min(d2$avg))/10)
       options(digits=7)
