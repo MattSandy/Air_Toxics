@@ -16,6 +16,7 @@ hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
 pol_list<-levels(as.factor(toxics$Pollutant))
 
 
+
 #*#*#*#*# Define server logic required to summarize and view the selected dataset
 shinyServer(function(input, output, session) {
   
@@ -180,25 +181,26 @@ shinyServer(function(input, output, session) {
       if(length(cuts2[duplicated(cuts2)])>0) cuts2 = sapply(1:31, function(x) ifelse(cuts2[x] %in% cuts2[-c(1:x)], .9999*cuts2[x], cuts2[x]))
       if(length(cuts2[duplicated(cuts2)])>0) cuts2 = seq(from=.9*min(d2$avg), to=1.05*max(d2$avg),(1.05*max(d2$avg)-.9*min(d2$avg))/30)
       #dat_list <- toJSONArray2(d1, json = F)
-      d2$Conc = signif(d2$avg,3)
+      d2$avg = signif(d2$avg,3)
       dat_list <- lapply(1:nrow(d2), function(x) d2[x,])
       dat_list <- lapply(dat_list, function(station){within(station, {
         fillColor = cut(avg, breaks = cuts2, right=F, labels = colorRampPalette(rev(labs[1:5]))(30), include.lowest=T)
         popup = iconv(whisker::whisker.render(
           '<b>{{SiteId}}</b><br><hr style="height = 3px; margin:0; margin-bottom:5px; padding:0; background-color: {{fillColor}}; border-color: {{fillColor}};"/>
-          Concentration  =  <b><code style="border:0; background-color: white; color: black;"> {{Conc}} ug/m3 </b></code> <br>
+          Concentration  =  <b><code style="border:0; background-color: white; color: black;"> {{avg}} ug/m3 </b></code> <br>
           <p>Coordinates: {{lat}},  {{long}}</p>'
         ), from = 'latin1', to = 'UTF-8')   }) })
       map <- Leaflet$new()
-      map$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = 13+round(-4.7*((max(d2$lat)-min(d2$lat))^(1/2.5))))
       map$tileLayer(provider = "Stamen.TonerLite")
       map$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
                   onEachFeature = '#! function(feature, layer){layer.bindPopup(feature.properties.popup)} !#',
                   pointToLayer =  "#! function(feature, latlng){return L.circleMarker(latlng, {
                   radius: 11, fillColor: feature.properties.fillColor || 'grey',    
                   color: '#000', weight: 1, fillOpacity: 0.88, title: feature.properties.popup }) } !#"                                                               )
-      map$legend(position = 'topleft', colors = if(nums==1) labs[2:3] else labs[1:5], labels = as.vector(if(nums==1) c(signif(rev(cuts2)[c(1,31)],2)) else c(rev(signif(cuts,2)))))
-      #map$fullScreen(TRUE)
+      map$legend(position = 'topleft', colors = if(nums==1){
+        cut(d2$avg*c(1.01,.9993), breaks = cuts2, right=F, labels = colorRampPalette(rev(labs[1:5]))(30), include.lowest=T) }
+                        else {labs[1:5]}, labels = as.vector(if(nums==1) c(signif(d2$avg*c(1.017,.989),2)) else c(rev(signif(cuts,2)))))
+      map$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = 13+round(-4.7*((max(d2$lat)-min(d2$lat))^(1/2.5))))
     }
     else{          
       map <- Leaflet$new()
