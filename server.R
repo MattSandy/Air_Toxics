@@ -322,7 +322,7 @@ shinyServer(function(input, output, session) {
     else {options("digits"= 3)
           data <- left_join(data, hbvs[,c(1,4:7)], by="CAS")
           data[,c(19,22,3,8,9,14,21,13,15,11,12,7,23,17,18,24:27)] }
-  }, options= list(bLengthChange=T, aLengthMenu = c(5, 10, 30), iDisplayLength = 5, bFilter=T))
+  }, options= list(bLengthChange=T, aLengthMenu = c(5, 10, 25, 50), iDisplayLength = 10, bFilter=T))
   
   
 })
