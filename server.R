@@ -170,17 +170,15 @@ shinyServer(function(input, output, session) {
     else if(nrow(dataset2())>0){
       d2 <- dataset2()[,c("year","MPCAID", "lat","long", "SiteId", input$time)]
       names(d2)[6] <- "Conc"
-      d2 <- group_by(d2, MPCAID) %.% mutate(avg = mean(Conc)) %.% filter(year == year[1])
+      if(input$time == "km_mean") d2 <- group_by(d2, MPCAID) %.% mutate(avg = mean(Conc)) %.% filter(year == year[1])
+      else d2 <- group_by(d2, MPCAID) %.% mutate(avg = max(Conc)) %.% filter(year == year[1])
       nums <- length(unique(d2$avg))
       labs <- if(input$time == "km_mean") c("#081D58","#0088EE", "#44BBCC","#99DDBB","#d9f0a3","#f7fcb9") else c("#67001f","#810f7c", "#88419d","#8c96c6","#9ebcda","#e0ecf4")  
       cuts <- quantile(c(d2$avg), c(.01,.25,.5,.8,.998))
-      #cuts <- seq(from=.95*min(d2$avg), to=max(d2$avg), (max(d2$avg)-.95*min(d2$avg))/4)
-      #cuts2 <- seq(from=.95*min(d2$avg), to=max(d2$avg),(max(d2$avg)-.95*min(d2$avg))/10)
       options(digits=7)
       cuts2 <- quantile(c(d2$avg,.985*min(d2$avg), 1.015*max(d2$avg)), seq(from=0, to=1, 1/30))
       if(length(cuts2[duplicated(cuts2)])>0) cuts2 = sapply(1:31, function(x) ifelse(cuts2[x] %in% cuts2[-c(1:x)], .9999*cuts2[x], cuts2[x]))
       if(length(cuts2[duplicated(cuts2)])>0) cuts2 = seq(from=.9*min(d2$avg), to=1.05*max(d2$avg),(1.05*max(d2$avg)-.9*min(d2$avg))/30)
-      #dat_list <- toJSONArray2(d1, json = F)
       d2$avg = signif(d2$avg,3)
       dat_list <- lapply(1:nrow(d2), function(x) d2[x,])
       dat_list <- lapply(dat_list, function(station){within(station, {
