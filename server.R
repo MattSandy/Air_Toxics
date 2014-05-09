@@ -225,7 +225,7 @@ shinyServer(function(input, output, session) {
       names(bar2)[4] <- "Conc"
       #bar2[bar2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
       num <-length(unique(bar2$groupid2))
-      a <- suppressWarnings(ggplot(data= bar2, environment=environment(), aes(x= reorder(groupid2,year), y=bar2$Conc) ) +                        
+      a <- suppressWarnings(ggplot(data= bar2, environment=environment(), aes(x= reorder(groupid2,year), y=Conc) ) +                        
                               geom_bar(aes(fill = as.factor(year)), stat="identity") +
                               theme(axis.text.x = element_text(size = ifelse(num <20, 14, 49/(num^.38)), lineheight=1, angle = 45, hjust = 1, vjust= 1, color="#080808"), 
                                     axis.text.y = element_text(size =13.5, face="plain", color = "#383838", hjust= unit(-.25, "cm")), 
