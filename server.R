@@ -154,7 +154,7 @@ shinyServer(function(input, output, session) {
   })
   
   #output$credits <- renderText({
-  # paste("hello",sep="")
+  # paste("Credits: ", sep="")
   #})
   
   #--------------------------------# 
@@ -223,7 +223,7 @@ shinyServer(function(input, output, session) {
     else if(nrow(dataset2())>0) {
       bar2 <- dataset2()[,c("year","groupid2", "SiteId", input$time, "km_UCL")]
       names(bar2)[4] <- "Conc"
-      bar2[bar2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
+      #bar2[bar2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
       num <-length(unique(bar2$groupid2))
       a <- suppressWarnings(ggplot(data= bar2, environment=environment(), aes(x= reorder(groupid2,year), y=bar2$Conc) ) +                        
                               geom_bar(aes(fill = as.factor(year)), stat="identity") +
@@ -283,7 +283,7 @@ shinyServer(function(input, output, session) {
       if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
       names(trend2)[4] <- "Conc"
       trend2$Conc <- signif(trend2$Conc, digits=3)
-      trend2[trend2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
+      #trend2[trend2$SiteId == "964  -  Minneapolis-St Paul International Airport", "SiteId"] <- "964  -  MSP Intl. Airport"
       h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId", radius=4.2)
       h1$addParams(dom = 'trends')
       h1$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
@@ -292,7 +292,7 @@ shinyServer(function(input, output, session) {
       h1$chart(height=450, spacingLeft=5, spacingTop=0, marginBottom=50, marginRight=0, spacingRight=0)
       h1$legend(margin=8, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10, width=770)
       h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
-      h1$subtitle(y=40, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text=risk())
+      h1$subtitle(y=40, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text= paste("- - -", risk(), sep=""))
       h1$plotOptions(series=list(shadow=T, data= list(3)), pointStart= 2002, pointInterval=1)
     }     
     else {df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
