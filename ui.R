@@ -50,7 +50,7 @@ shinyUI(fluidPage(
            h4("Summary:"),  
            radioButtons("time", " ",
                         list("Annual Average" = "km_mean",
-                             "2nd Highest Concentration" = "Second_Highest"))       
+                             "2nd Highest" = "Second_Highest"))       
     ),
     column(3,
            br(),   
@@ -96,15 +96,16 @@ shinyUI(fluidPage(
       tags$style(type='text/css', "#title {padding:0;  font-size:17px;  padding-left:12px; margin:0;  margin-top: 1px;}"),
       tags$style(type='text/css', "#risk {color:darkred; font-size:14.5px; font-weight:550; padding:0;  padding-left:12px; margin:0; margin-top: 4px; margin-bottom: 2px;}"),
       tags$style(type='text/css', "h5 { margin:0; padding-top:0;  }"),
-      tags$style(type='text/css', "#trends {margin: 0; margin-top: 1px; padding:0; width: 98%; height: 460px;}")
-      
+      tags$style(type='text/css', "#trends {margin: 0; margin-top: 1px; padding:0; width: 99.5%; height: 460px;}"),
+      tags$style(type='text/css', "#barplot {margin: 0; margin-top: 1px; padding:0; width: 99.5%; height: 460px;}")
+      #tags$script(src="http://code.highcharts.com/modules/exporting.js")
     ),
     
     
     tabsetPanel(
       tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")),mapOutput("map"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
       tabPanel("Trends", showOutput("trends", "highcharts")),
-      tabPanel("Bar Charts", plotOutput("barplot", height = 470)),
+      tabPanel("Bar Charts", showOutput("barplot", "highcharts")),
       tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table"))
       
     ),
