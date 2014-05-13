@@ -105,7 +105,8 @@ shinyUI(fluidPage(
       tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")),mapOutput("map"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
       tabPanel("Trends", showOutput("trends", "highcharts")),
       tabPanel("Bar Charts", showOutput("barplot", "highcharts")),
-      tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table"))
+      tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table")),
+      tabPanel("Monitors", h5("MPCA Air Monitoring Network 2002-2014"),mapOutput("monitorMap"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}'))
       
     ),
     
