@@ -347,9 +347,9 @@ shinyServer(function(input, output, session) {
       dat_list <- lapply(dat_list, function(station){within(station, {
         popup = iconv(whisker::whisker.render(
           '<b>{{SiteId}}</b><br><hr style="height = 3px; margin:0; margin-bottom:5px;  max-width:690px; padding:0; background-color: #004F98; border-color: #004F98;"/>
-          <b style="color:#bfe0ff;">Years Active:</b> <code style="border:0; word-wrap:normal; white-space: nowrap; max-width: 690px; background-color: black; color: white;"> {{year}} </code> <br><br>
-          <b style="color:#bfe0ff;">Pollutants:</b><code style="border:0; word-wrap:normal; max-width: 690px; white-space: pre-wrap; background-color: black; color: white;"> {{Pollutant}} </code><br>
-          <p><b style="color:#bfe0ff;">Coordinates:</b> {{lat}},  {{long}}</p>'
+          <b style="color:#5db0ff;">Years Active:</b> <code style="border:0; word-wrap:normal; white-space: nowrap; max-width: 690px; background-color: black; color: white;"> {{year}} </code> <br><br>
+          <b style="color:#5db0ff;">Pollutants:</b><code style="border:0; word-wrap:normal; max-width: 690px; white-space: pre-wrap; background-color: black; color: white;"> {{Pollutant}} </code><br>
+          <p><b style="color:#5db0ff;">Coordinates:</b> {{lat}},  {{long}}</p>'
         ), from = 'latin1', to = 'UTF-8')   }) })
       map <- Leaflet$new()
       map$tileLayer(provider = "Stamen.TonerLite")
