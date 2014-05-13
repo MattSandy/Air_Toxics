@@ -233,19 +233,19 @@ shinyServer(function(input, output, session) {
       bar2$km_UCL <- signif(bar2$km_UCL, digits=3)
       #h1 <- hPlot(x="SiteId", y = "Conc", type="column", data = bar2 %.% group_by(SiteId), group="year")
       bar2<-arrange(bar2,year, MPCAID)
-      #bar2[bar2==-1] <- NA
       h2 <- Highcharts$new()
       if(input$time=="km_mean") h2$colors(c('#2f7ed8', '#8bbc21', '#EAC530', '#1aadce', '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a','#0d233a','grey'))
       else h2$colors(c('#7cb5ec', '#90ed7d', '#f7a35c', '#8085e9','#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1','#434348'))
       h2$addParams(dom = 'barplot')
       h2$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
-      h2$xAxis(categories = levels(factor(bar2$SiteId)), title = list(style=list(fontSize="13px"), margin=6, text="Monitor Site"), type="category", labels=list(rotation=-58, align='right'))
-      h2$yAxis(plotLines=list(list(zIndex=5, value=risk.1()*risk.is(), shadow=T, color="darkred", width=2*risk.is(), dashStyle="shortdash", shadow=T,label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#a48484")))), min=0, max=1.0001*max(c(bar2$Conc, bar2$km_UCL),na.rm=T), title = list(style=list(fontSize="13px"), spacingTop=5, text = "Concentration (ug/m3)"))
-      h2$chart(height=450, spacingLeft=6, spacingRight=4, spacingTop=0, spacingBottom=10, marginBottom=143, marginRight=5)
+      h2$xAxis(categories = levels(factor(bar2$SiteId)), title = list(style=list(fontSize="13px", color="#333333"), margin=6, text="Monitor Site"), type="category", labels=list(rotation=-58, align='right'))
+      h2$yAxis(plotLines=list(list(zIndex=5, value=risk.1()*risk.is(), shadow=T, color="darkred", width=2*risk.is(), dashStyle="dash", shadow=T,label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min=0, max=1.0001*max(c(bar2$Conc, bar2$km_UCL),na.rm=T), title = list(style=list(fontSize="13px", color="#333333"), spacingTop=5, text = "Concentration (ug/m3)"))
+      h2$chart(zoomType='x',height=450, spacingLeft=6, spacingRight=4, spacingTop=0, spacingBottom=10, marginBottom=143, marginRight=5)
       h2$legend(margin=10, redraw=F, symbolWidth=25, y=45, symbolPadding=5, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10)
       bar2[bar2==-1] <- NULL
-      for(years in unique(bar2$year)) {h2$series(data = filter(bar2,  year == years)$Conc, name =years, type="column", tooltip=F) 
-                                       if(input$time =="km_mean") h2$series(type="errorbar", color="grey", data =  lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "km_UCL")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )    }
+      for(years in unique(bar2$year)) {h2$series(data = filter(bar2,  year == years)$Conc, name =years, type="column") 
+                                       if(input$time =="km_mean") h2$series(type="errorbar", color="grey", data =  lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "km_UCL")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )  
+                                       else h2$series(type="errorbar", color="grey", data = lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "Conc")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )  }
       h2$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
       h2$subtitle(y=40, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text= paste("- - ", risk(), sep=""))
       h2$plotOptions(series=list(shadow=F, groupPadding=.13))
@@ -284,14 +284,23 @@ shinyServer(function(input, output, session) {
       if(length(unique(trend2$MPCAID)) > 7) trend2 <- trend2[trend2$MPCAID %in% counts[counts$count >1,1], ] 
       if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
       names(trend2)[4] <- "Conc"
+      for(years in min(trend2$year):max(trend2$year)) { for(site in unique(trend2$SiteId)) {if(nrow(filter(trend2,SiteId==site, year == years))<1) trend2<-rbind(trend2, c(years, filter(trend2,SiteId==site)$MPCAID[1], site, -1,-1)) }}
+      trend2[trend2==-1] <- NA
+      trend2$year  <- as.numeric(trend2$year)
+      trend2$Conc  <- as.numeric(trend2$Conc)
       trend2$Conc <- signif(trend2$Conc, digits=3)
-      h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId")
+      trend2<- trend2[order(trend2$year),]
+      h1 <- Highcharts$new()
+      #h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId")
+      x<-1
+      for(site in unique(trend2$SiteId)) {h1$series(data = filter(trend2, SiteId==site)$Conc, name=site, type="spline", connectNulls=T, dashStyle=c("line","shortdot","dot")[x%%4+1])
+       x<-x+1}                         
       h1$addParams(dom = 'trends')
       if(input$time=="km_mean") h1$colors(c('#2f7ed8', '#8bbc21', '#EAC530', '#1aadce', '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a','#0d233a','grey'))
       else h1$colors(c('#7cb5ec', '#90ed7d', '#f7a35c', '#8085e9','#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1','#434348'))
       h1$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
-      h1$xAxis(categories = unique(trend2$year), title = list(style=list(fontSize="13px"), margin=15, text="Year"), type="category")
-      h1$yAxis(plotLines=list(list(zIndex=1, value=risk.1()*risk.is(), color="darkred", width=2*risk.is(), dashStyle="shortdash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#a48484")))), min = 0.99*min(trend2$Conc), max = 1.01*max(trend2$Conc), ceiling = 100, title = list(style=list(fontSize="13px"), marginBottom=5, text = "Concentration (ug/m3)"))
+      h1$xAxis(categories = unique(trend2$year), title = list(style=list(fontSize="13px", color="#333333"), margin=15, text="Year"), type="category")
+      h1$yAxis(plotLines=list(list(zIndex=1, value=risk.1()*risk.is(), color="darkred", width=2*risk.is(), dashStyle="dash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min = 0.99*min(trend2$Conc), max = 1.01*max(trend2$Conc), ceiling = 100, title = list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
       h1$chart(height=450, spacingLeft=5, spacingRight=4, spacingTop=0, marginBottom=46, marginRight=4)
       h1$legend(margin=10, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, paddingBottom=5, width=890)
       h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
@@ -327,6 +336,34 @@ shinyServer(function(input, output, session) {
           data <- left_join(data, hbvs[,c(1,4:7)], by="CAS")
           data[,c(19,22,3,8,9,14,21,13,15,11,12,7,23,17,18,24:27)] }
   }, options= list(bLengthChange=T, aLengthMenu = c(5, 10, 25, 50), iDisplayLength = 10, bFilter=T))
+  
+  
+  output$monitorMap <- renderMap({
+      d2 <- toxics[0,]
+      for(site in unique(toxics$SiteId)) d2 <-rbind(d2, filter(toxics, SiteId ==site)[1,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")])
+      for(i in 1:nrow(d2)) {d2$year[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$year)),collapse=", ")
+                          d2$Pollutant[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$Pollutant)), collapse=", ") }        
+      dat_list <- lapply(1:nrow(d2), function(x) d2[x,])
+      dat_list <- lapply(dat_list, function(station){within(station, {
+        popup = iconv(whisker::whisker.render(
+          '<b>{{SiteId}}</b><br><hr style="height = 3px; margin:0; margin-bottom:5px;  max-width:690px; padding:0; background-color: #004F98; border-color: #004F98;"/>
+          <b style="color:#bfe0ff;">Years Active:</b> <code style="border:0; word-wrap:normal; white-space: nowrap; max-width: 690px; background-color: black; color: white;"> {{year}} </code> <br><br>
+          <b style="color:#bfe0ff;">Pollutants:</b><code style="border:0; word-wrap:normal; max-width: 690px; white-space: pre-wrap; background-color: black; color: white;"> {{Pollutant}} </code><br>
+          <p><b style="color:#bfe0ff;">Coordinates:</b> {{lat}},  {{long}}</p>'
+        ), from = 'latin1', to = 'UTF-8')   }) })
+      map <- Leaflet$new()
+      map$tileLayer(provider = "Stamen.TonerLite")
+      #onEachFeature = '#! function(feature, layer){layer.bindLabel(feature.properties.label, {maxWidth: 0} ) .addTo(map)} !#',
+      map$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
+                  onEachFeature = '#! function(feature, layer){layer.bindPopup(feature.properties.popup, {maxWidth: 700, minWidth:430})} !#',
+                  pointToLayer =  "#! function(feature, latlng){return L.marker(latlng, {
+                  color: '#000', weight: 1, title: feature.properties.SiteId }) } !#"                                                               )
+      map$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = 13+round(-4.7*((max(d2$lat)-min(d2$lat))^(1/2.5))))
+  
+      suppressWarnings(return(map))
+    
+  })
+  
   
   
 })
