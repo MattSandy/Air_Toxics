@@ -1,6 +1,6 @@
 #Create chart, map, and summary of chosen Air Toxics data,  ui.R
 #library(shiny)
-#library(rCharts)
+library(rCharts)
 
 shinyUI(fluidPage(
   tags$head(    
