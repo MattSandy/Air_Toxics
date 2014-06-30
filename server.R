@@ -1,4 +1,5 @@
-#Chart, map, and summarize chosen Air Toxics data,  ui.R
+##server.R for Air Toxics 2002-2014
+#Chart, map, and summarize chosen Air Toxics data
 library(shiny)
 require("grid")
 require("scales")
