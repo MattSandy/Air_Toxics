@@ -5,10 +5,9 @@ library(scales)
 library(dplyr)
 library(rCharts)
 
-
 shinyUI(fluidPage(
   tags$head(    
-    tags$style(type='text/css', ".select { max-width: 160px; }"),
+    tags$style(type='text/css', ".select { max-width: 170px; }"),
     tags$style(type='text/css', ".jslider { max-width: 250px; }"),
     tags$style(type='text/css', ".row-fluid { margin:auto; max-width: 100%; margin-top: 0px; margin-bottom:0; z-index:1; padding-top: 0px; padding-bottom: 0px; }"),
     tags$style(type='text/css', ".span4 { max-width: 260px; margin:0; }"),
@@ -42,7 +41,7 @@ shinyUI(fluidPage(
     column(2,
            br(),
            #https://drive.google.com/file/d/0B9Ub5HCtyNmkME55b1FwU3l1NkE/edit?usp=sharing
-           img(src="https://drive.google.com/uc?id=0B9Ub5HCtyNmkME55b1FwU3l1NkE", style = "width: 107%; max-width: 220px; height: 108%; margin: 0px; ")
+           img(src="https://drive.google.com/uc?id=0B9Ub5HCtyNmkME55b1FwU3l1NkE", style = "margin: auto; width: 107%; max-width: 220px; height: 108%; margin: 0px; ")
            #img(src="https://familysearch.org/learn/wiki/en/images/2/2a/Minnesota-county-map.gif", style = "width: 75%; margin-left: 20px; margin-right: 0;")
            
     ),
@@ -60,7 +59,7 @@ shinyUI(fluidPage(
            h4("Years:"), 
            uiOutput("yearRange"),
            br(),
-           h4("Region:"),
+           h4("Region:", style = "margin-top: -3px;"),
            uiOutput("regions")
     ),
     column(3,
