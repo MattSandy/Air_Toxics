@@ -1,20 +1,16 @@
-##server.R for Air Toxics 2002-2014
-#Chart, map, and summarize chosen Air Toxics data
+#server.R for Air Toxics 2002-2013
 library(shiny)
-require("grid")
-require("scales")
+library(grid)
+library(scales)
 library(dplyr)
 library(rCharts)
 
-options("digits"= 4)
+
 toxics<- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=7000 )
-#saveRDS(toxics, file="toxics_2014.rds")
-#toxics<- readRDS(file="toxics_2014.rds")
 hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
-pol_list<-levels(as.factor(toxics$Pollutant))
+pol_list <-levels(as.factor(toxics$Pollutant))
 
-
-#*#*#*#*# Server logic to summarize the selected dataset and map the monitor network
+#*# Server logic to summarize the selected dataset and map the monitor network
 shinyServer(function(input, output, session) {
   
   #Generate Pollutant List
@@ -24,7 +20,7 @@ shinyServer(function(input, output, session) {
     })
   
   getyearRange <- reactive({
-    ranges <- c(2002,2013)
+    ranges <- c(2010,2013)
     if(!is.null(input$pollutant)) ranges <- range(filter(toxics, Pollutant == input$pollutant | input$pollutant =="All")$year)
     ranges
   })
@@ -33,14 +29,14 @@ shinyServer(function(input, output, session) {
   value_has_not_changed <- reactiveValues(x=0)
   
   in_years <- reactive ({
-    years <- c(2002,2004)
-    ifelse(is.null(input$years), years<- c(2002,2004), years<- input$years)
+    years <- c(2010,2013)
+    ifelse(is.null(input$years), years<- c(2010,2013), years<- input$years)
     years
   })
   
   #Generate Years
   output$yearRange <- renderUI({
-    newvalue <- c(2002,2004)
+    newvalue <- c(2010,2013)
     ranges <- getyearRange()  
     slider = isolate(in_years())
     if(!is.null(slider)){
@@ -58,7 +54,7 @@ shinyServer(function(input, output, session) {
   # Return the requested dataset Filtered by Pollutant
   dataset <- reactive({
     w <- value_has_not_changed[["x"]] 
-    years <- c(2002,2004)
+    years <- c(2010,2013)
     if(!is.null(input$years)) years <- isolate(input$years)
     ifelse(is.null(isolate(input$pollutant)), pollutant <-  "Formaldehyde", pollutant <- isolate(input$pollutant))
     filter(toxics, Pollutant == pollutant | pollutant == "All", year >= years[1], year <= years[2])
@@ -134,7 +130,7 @@ output$download <- downloadHandler(
   risk.is <- reactive({
     if(is.null(risk.1())) return(0)
     if(input$time == "Second_Highest") { ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()[,"Second_Highest"])) ), 0, 1)}
-    else {ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()$km_UCL)) ), 0, 1)}
+    else {ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()$Boot_UCL)) ), 0, 1)}
     
   })
 
@@ -144,16 +140,25 @@ risk <- reactive({
   paste(risk.type(), units.are(),sep="")
 })
 
-#Paste title together
+# Paste title together
   titlez <- reactive({
     if(is.null(risk.1()) | !nrow(dataset2())> 0) return("No data available for this selection.")
     ifelse(input$time=="km_mean", paste("Average", isolate(input$pollutant), "Concentration"), paste("Second Highest", isolate(input$pollutant), "Concentration"))
   })
   
+# Paste Monitor Network title 
+  titleM <- reactive({
+    paste0("MPCA Air Monitoring Network ", input$years[1], " - ", input$years[2])
+})
+
   output$title <- renderText({
     titlez()
   })
-  
+
+  output$titleM <- renderText({
+    titleM()
+  })
+
   output$risk <- renderText({
     risk()
   })
@@ -188,7 +193,7 @@ risk <- reactive({
           <p>Coordinates: {{lat}},  {{long}}</p>'
         ), from = 'latin1', to = 'UTF-8')  }) })
       map <- Leaflet$new()
-      map$tileLayer(provider = "Stamen.TonerLite")
+      map$tileLayer(provider = "Stamen.TonerLite", maxZoom=16)
       map$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
                   onEachFeature = '#! function(feature, layer){layer.bindPopup(feature.properties.popup)} !#',
                   #onEachFeature = '#! function(feature, layer){layer.setOpacity('0.5') } !#',
@@ -223,16 +228,16 @@ risk <- reactive({
       
     }
     else if(nrow(dataset2())>0){
-      bar2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time, "km_UCL")]
+      bar2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time, "Boot_UCL")]
       names(bar2)[4] <- "Conc"
       bar2<-arrange(bar2,year)
       for(years in unique(bar2$year)) { for(site in unique(bar2$SiteId)) {if(nrow(filter(bar2,SiteId==site, year == years))<1) bar2<-rbind(bar2, c(years, filter(bar2,SiteId==site)$MPCAID[1], site, -1,-1)) }}
       bar2[bar2==-1] <- NA
       bar2$year  <- as.numeric(bar2$year)
       bar2$Conc  <- as.numeric(bar2$Conc)
-      bar2$km_UCL  <- as.numeric(bar2$km_UCL)
+      bar2$Boot_UCL  <- as.numeric(bar2$Boot_UCL)
       bar2$Conc <- signif(bar2$Conc, digits=3)
-      bar2$km_UCL <- signif(bar2$km_UCL, digits=3)
+      bar2$Boot_UCL <- signif(bar2$Boot_UCL, digits=3)
       #h1 <- hPlot(x="SiteId", y = "Conc", type="column", data = bar2 %.% group_by(SiteId), group="year")
       bar2<-arrange(bar2,year, MPCAID)
       h2 <- Highcharts$new()
@@ -241,14 +246,14 @@ risk <- reactive({
       h2$addParams(dom = 'barplot')
       h2$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
       h2$xAxis(categories = levels(factor(bar2$SiteId)), title = list(style=list(fontSize="13px", color="#333333"), margin=6, text="Monitor Site"), type="category", labels=list(rotation=-58, align='right'))
-      if(risk.is()>0) h2$yAxis(plotLines=list(list(zIndex=5,value=risk.1(), shadow=T, color="darkred", width=2, dashStyle="dash", shadow=T,label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min=0, max=1.0001*max(c(bar2$Conc,bar2$km_UCL),na.rm=T), title = list(style=list(fontSize="13px", color="#333333"), spacingTop=5, text = "Concentration (ug/m3)"))
-      else h2$yAxis(min=0, max=1.0001*max(c(bar2$Conc,bar2$km_UCL),na.rm=T), title = list(style=list(fontSize="13px", color="#333333"), spacingTop=5, text = "Concentration (ug/m3)"))
+      if(risk.is()>0) h2$yAxis(plotLines=list(list(zIndex=5,value=risk.1(), shadow=T, color="darkred", width=2, dashStyle="dash", shadow=T,label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min=0, max=1.0001*max(c(bar2$Conc,bar2$Boot_UCL),na.rm=T), title = list(style=list(fontSize="13px", color="#333333"), spacingTop=5, text = "Concentration (ug/m3)"))
+      else h2$yAxis(min=0, max=1.0001*max(c(bar2$Conc,bar2$Boot_UCL),na.rm=T), title = list(style=list(fontSize="13px", color="#333333"), spacingTop=5, text = "Concentration (ug/m3)"))
       h2$chart(zoomType='x', height=450, spacingLeft=6, spacingRight=4, spacingTop=0, spacingBottom=10, marginBottom=145, marginRight=5)
       h2$legend(margin=10, redraw=F, symbolWidth=25, y=45, symbolPadding=5, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10)
       bar2[bar2==-1] <- NULL
-      for(years in unique(bar2$year)) {h2$series(data = filter(bar2,  year == years)$Conc, name =years, type="column") 
-                                       if(input$time=="km_mean") h2$series(type="errorbar", color="grey", data =  lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "km_UCL")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )  
-                                       else h2$series(type="errorbar", visible=F, color="grey", data = lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "km_UCL")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )  
+      for(years in unique(bar2$year)) {h2$series(data = filter(bar2, year == years)$Conc, name =years, type="column") 
+                                       if(input$time=="km_mean") h2$series(type="errorbar", color="grey", data =  lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "Boot_UCL")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )  
+                                       #else h2$series(type="errorbar", visible=F, color="grey", data = lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "Boot_UCL")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )  
       }
       h2$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
       h2$subtitle(y=38, x=-1, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text= paste("- - ", risk(), sep=""))
@@ -304,8 +309,8 @@ risk <- reactive({
       else h1$colors(c('#7cb5ec', '#90ed7d', '#f7a35c', '#8085e9','#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1','#434348'))
       h1$tooltip(followPointer =T, hideDelay = 0, animation=T, shared=F)
       h1$xAxis(categories = unique(trend2$year), title = list(style=list(fontSize="13px", color="#333333"), margin=15, text="Year"), type="category")
-      if(risk.is()>0) h1$yAxis(plotLines=list(list(zIndex=5, visible = ifelse(risk.is()>0,T,F), value=risk.1(), color="darkred", width=2, dashStyle="dash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min = 0.99*min(trend2$Conc), max = 1.01*max(trend2$Conc), ceiling = 100, title = list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
-      else h1$yAxis(min = 0.99*min(trend2$Conc), max = 1.01*max(trend2$Conc), ceiling = 100, title = list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
+      if(risk.is()>0) h1$yAxis(plotLines=list(list(zIndex=5, visible = ifelse(risk.is()>0,T,F), value=risk.1(), color="darkred", width=2, dashStyle="dash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min = 0.99*min(trend2$Conc, na.rm=T), max = 1.01*max(trend2$Conc,na.rm=T), ceiling = 100, title = list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
+      else h1$yAxis(min = 0.99*min(trend2$Conc, na.rm=T), max = 1.01*max(trend2$Conc, na.rm=T), ceiling = 100, title = list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
       h1$chart(zoomType='x', height=450, spacingLeft=5, spacingRight=4, spacingTop=0, marginBottom=46, marginRight=4)
       h1$legend(margin=10, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, paddingBottom=5, width=890)
       h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
@@ -343,12 +348,21 @@ risk <- reactive({
   
   
   output$monitorMap <- renderMap({
-      d2 <- toxics[0,]
-      toxics<-dataset2()
-      for(site in unique(toxics$SiteId)) d2 <-rbind(d2, filter(toxics, SiteId ==site)[1,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")])
+      d2 <- toxics[0,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")]
+      toxics <- dataset2()
+      # Reduce the table to a single row for each site
+      for(site in unique(toxics$SiteId)) d2 <-rbind(d2, filter(toxics, SiteId==site)[1,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")])
+      
+      #  In order to display them in the popup on the map: 
+      #     Paste all the years together that a site was active
+      #     And also Paste all the pollutants together that a site sampled 
       for(i in 1:nrow(d2)) {d2$year[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$year)),collapse=", ")
                           d2$Pollutant[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$Pollutant)), collapse=", ") }        
+      
+      # Turn the data frame into a list, with each row as a separate item
       dat_list <- lapply(1:nrow(d2), function(x) d2[x,])
+      
+      # Format the popup for each site in the list
       dat_list <- lapply(dat_list, function(station){within(station, {
         popup = iconv(whisker::whisker.render(
           '<b>{{SiteId}}</b><br><hr style="height = 3px; margin:0; margin-bottom:5px;  max-width:690px; padding:0; background-color: #004F98; border-color: #004F98;"/>
@@ -356,13 +370,22 @@ risk <- reactive({
           <b style="color:#5db0ff;">Pollutants:</b><code style="border:0; word-wrap:normal; max-width: 690px; white-space: pre-wrap; background-color: black; color: white;"> {{Pollutant}} </code><br>
           <p><b style="color:#5db0ff;">Coordinates:</b> {{lat}},  {{long}}</p>'
         ), from = 'latin1', to = 'UTF-8')   }) })
+      
       map <- Leaflet$new()
+      
+      # Set the background map to black and white from "Stamen Maps"
       map$tileLayer(provider = "Stamen.TonerLite")
+      
       #onEachFeature = '#! function(feature, layer){layer.bindLabel(feature.properties.label, {maxWidth: 0} ) .addTo(map)} !#',
+      
+      # Make the map and assign a marker to each lat, long
+      # Attach the popup text that we made above
       map$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
                   onEachFeature = '#! function(feature, layer){layer.bindPopup(feature.properties.popup, {maxWidth: 700, minWidth:430})} !#',
                   pointToLayer =  "#! function(feature, latlng){return L.marker(latlng, {
                   color: '#000', weight: 1, title: feature.properties.SiteId }) } !#"                                                               )
+      
+      # Control the zoom level with a silly formula I made up
       map$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = max(6,13+round(-5*(max(c(.35+(max(d2$long)-min(d2$long)),max(d2$lat)-min(d2$lat)))^(1/2.5)))))
       suppressWarnings(return(map))
     
