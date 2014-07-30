@@ -1,7 +1,5 @@
 #Create chart, map, and summary of chosen Air Toxics data,  ui.R
 library(shiny)
-library(grid)
-library(scales)
 library(dplyr)
 library(rCharts)
 
