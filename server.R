@@ -1,7 +1,5 @@
 #server.R for Air Toxics 2002-2013
 library(shiny)
-library(grid)
-library(scales)
 library(dplyr)
 library(rCharts)
 
