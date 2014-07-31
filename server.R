@@ -3,8 +3,12 @@ library(shiny)
 library(dplyr)
 library(rCharts)
 
+# shinyapps::configureApp("Air_Toxic", size="large")
+#options("digits"= 4)
+#toxics<- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=7000 )
+#saveRDS(toxics, file="toxics_2014.rds")
 
-toxics<- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=7000 )
+toxics <- readRDS(file="toxics_2014.rds")
 hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
 pol_list <-levels(as.factor(toxics$Pollutant))
 
@@ -61,7 +65,7 @@ shinyServer(function(input, output, session) {
   
   #Generate Regions List
   output$regions <- renderUI({
-    selectInput("region", "", selected= "All", choices = c("All", levels(as.factor(dataset()$RegionName)), levels(as.factor(dataset()$County)))) })
+    selectInput("region", "", selected= "All", choices = c("All", levels(as.factor(toxics$RegionName)), levels(as.factor(toxics$County)))) })
   
   #Filter dataset by selected region 
   dataset1 <- reactive({
@@ -186,7 +190,7 @@ risk <- reactive({
       dat_list <- lapply(dat_list, function(station){within(station, {
         fillColor = cut(avg, breaks = cuts2, right=F, labels = colorRampPalette(rev(labs[1:5]))(30), include.lowest=T)
         popup = iconv(whisker::whisker.render(
-          '<b>{{SiteId}}</b><br><hr style="height = 3px; margin:0; margin-bottom:5px; padding:0; background-color: {{fillColor}}; border-color: {{fillColor}};"/>
+          '<b>{{SiteId}}</b><br><hr style="height:2px; margin:0; margin-bottom:5px; padding:0; background-color: {{fillColor}}; border-color: {{fillColor}};"/>
           Concentration  =  <b><code style="border:0; background-color: white; color: black;"> {{avg}} ug/m3 </b></code> <br>
           <p>Coordinates: {{lat}},  {{long}}</p>'
         ), from = 'latin1', to = 'UTF-8')  }) })
@@ -197,7 +201,7 @@ risk <- reactive({
                   #onEachFeature = '#! function(feature, layer){layer.setOpacity('0.5') } !#',
                   pointToLayer =  "#! function(feature, latlng){return L.circleMarker(latlng, {
                   radius: 11, fillColor: feature.properties.fillColor || 'grey',    
-                  color: '#000', weight: 1, fillOpacity: 0.87, title: feature.properties.SiteId }) } !#"                                                               )
+                  color: '#000', weight: 1, fillOpacity: 0.87, title: feature.properties.SiteId }) } !#")
       map$legend(position = 'topleft', colors = if(nums==1){
         cut(d2$avg*c(1.01,.9993), breaks = cuts2, right=F, labels = colorRampPalette(rev(labs[1:5]))(30), include.lowest=T) }
         else {labs[1:5]}, labels = as.vector(if(nums==1) c(signif(d2$avg*c(1.017,.989),2)) else c(rev(signif(cuts,2)))))
@@ -357,35 +361,30 @@ risk <- reactive({
       for(i in 1:nrow(d2)) {d2$year[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$year)),collapse=", ")
                           d2$Pollutant[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$Pollutant)), collapse=", ") }        
       
+      # Format the popup for each site in the list
+      dat_list <- mutate(d2, popup2 = "<b>Hello</b><br><br>")
+      
       # Turn the data frame into a list, with each row as a separate item
       dat_list <- lapply(1:nrow(d2), function(x) d2[x,])
-      
-      # Format the popup for each site in the list
-      dat_list <- lapply(dat_list, function(station){within(station, {
-        popup = iconv(whisker::whisker.render(
-          '<b>{{SiteId}}</b><br><hr style="height = 3px; margin:0; margin-bottom:5px;  max-width:690px; padding:0; background-color: #004F98; border-color: #004F98;"/>
-          <b style="color:#5db0ff;">Years Active:</b> <code style="border:0; word-wrap:normal; white-space: nowrap; max-width: 690px; background-color: black; color: white;"> {{year}} </code> <br><br>
-          <b style="color:#5db0ff;">Pollutants:</b><code style="border:0; word-wrap:normal; max-width: 690px; white-space: pre-wrap; background-color: black; color: white;"> {{Pollutant}} </code><br>
-          <p><b style="color:#5db0ff;">Coordinates:</b> {{lat}},  {{long}}</p>'
-        ), from = 'latin1', to = 'UTF-8')   }) })
-      
-      map <- Leaflet$new()
+             
+      mMap <- Leaflet$new()
       
       # Set the background map to black and white from "Stamen Maps"
-      map$tileLayer(provider = "Stamen.TonerLite")
+      mMap$tileLayer(provider = "Stamen.TonerLite", maxZoom=16)
       
       #onEachFeature = '#! function(feature, layer){layer.bindLabel(feature.properties.label, {maxWidth: 0} ) .addTo(map)} !#',
       
       # Make the map and assign a marker to each lat, long
       # Attach the popup text that we made above
-      map$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
-                  onEachFeature = '#! function(feature, layer){layer.bindPopup(feature.properties.popup, {maxWidth: 700, minWidth:430})} !#',
-                  pointToLayer =  "#! function(feature, latlng){return L.marker(latlng, {
-                  color: '#000', weight: 1, title: feature.properties.SiteId }) } !#"                                                               )
+    
+      mMap$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
+                  onEachFeature = "#! function(feature, layer){layer.bindPopup(feature.properties.popup2, {minHeight:300})} !#",
+                  pointToLayer = "#! function(feature, latlng){return L.marker(latlng, {
+                  color: '#000', weight: 1, title: feature.properties.SiteId }) } !#" )
       
       # Control the zoom level with a silly formula I made up
-      map$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = max(6,13+round(-5*(max(c(.35+(max(d2$long)-min(d2$long)),max(d2$lat)-min(d2$lat)))^(1/2.5)))))
-      suppressWarnings(return(map))
+      mMap$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = max(6,13+round(-5*(max(c(.35+(max(d2$long)-min(d2$long)),max(d2$lat)-min(d2$lat)))^(1/2.5)))))
+      suppressWarnings(return( mMap))
     
   })
   
