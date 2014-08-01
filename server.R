@@ -219,7 +219,7 @@ risk <- reactive({
   
   output$barplot <- renderChart({
     
-    if(is.null(isolate(input$pollutant)) | is.null(dataset2()) ) {
+    if (is.null(isolate(input$pollutant)) | is.null(dataset2()) | isolate(input$pollutant)== "All") {
       df <- data.frame(km_mean = rep(NA,12), Year= rep(NA,12))
       suppressWarnings(h1 <- hPlot(x="Year", y = "km_mean", type="column", data = df))
       h2$addParams(dom = 'barplot')
@@ -229,7 +229,7 @@ risk <- reactive({
       h2$chart(height=450, spacingLeft=5, marginBottom=45, marginRight=0, spacingRight=0)
       
     }
-    else if(nrow(dataset2())>0){
+    else if (nrow(dataset2())>0){
       bar2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time, "Boot_UCL")]
       names(bar2)[4] <- "Conc"
       bar2<-arrange(bar2,year)
@@ -278,7 +278,7 @@ risk <- reactive({
   
   output$trends <- renderChart({
     
-    if(is.null(isolate(input$pollutant)) | is.null(dataset2()) ) {
+    if(is.null(isolate(input$pollutant)) | is.null(dataset2()) | isolate(input$pollutant)== "All") {
       df <- data.frame(km_mean = rep(NA,12), Year= rep(NA,12))
       suppressWarnings(h1 <- hPlot(x="Year", y = "km_mean", type="line", data = df))
       h1$addParams(dom = 'trends')
