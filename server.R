@@ -350,41 +350,50 @@ risk <- reactive({
   
   
   output$monitorMap <- renderMap({
-      d2 <- toxics[0,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")]
-      toxics <- dataset2()
-      # Reduce the table to a single row for each site
-      for(site in unique(toxics$SiteId)) d2 <-rbind(d2, filter(toxics, SiteId==site)[1,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")])
-      
-      #  In order to display them in the popup on the map: 
-      #     Paste all the years together that a site was active
-      #     And also Paste all the pollutants together that a site sampled 
-      for(i in 1:nrow(d2)) {d2$year[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$year)),collapse=", ")
-                          d2$Pollutant[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$Pollutant)), collapse=", ") }        
-      
-      # Format the popup for each site in the list
-      dat_list <- mutate(d2, popup2 = "<b>Hello</b><br><br>")
-      
-      # Turn the data frame into a list, with each row as a separate item
-      dat_list <- lapply(1:nrow(d2), function(x) d2[x,])
-             
-      mMap <- Leaflet$new()
-      
-      # Set the background map to black and white from "Stamen Maps"
-      mMap$tileLayer(provider = "Stamen.TonerLite", maxZoom=16)
-      
-      #onEachFeature = '#! function(feature, layer){layer.bindLabel(feature.properties.label, {maxWidth: 0} ) .addTo(map)} !#',
-      
-      # Make the map and assign a marker to each lat, long
-      # Attach the popup text that we made above
-    
-      mMap$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
-                  onEachFeature = "#! function(feature, layer){layer.bindPopup(feature.properties.popup2, {minHeight:300})} !#",
-                  pointToLayer = "#! function(feature, latlng){return L.marker(latlng, {
-                  color: '#000', weight: 1, title: feature.properties.SiteId }) } !#" )
-      
-      # Control the zoom level with a silly formula I made up
-      mMap$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = max(6,13+round(-5*(max(c(.35+(max(d2$long)-min(d2$long)),max(d2$lat)-min(d2$lat)))^(1/2.5)))))
-      suppressWarnings(return( mMap))
+    d2 <- toxics[0,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")]
+    toxics <- dataset2()
+    # Reduce the table to a single row for each site
+    for(site in unique(toxics$SiteId)) d2 <-rbind(d2, filter(toxics, SiteId==site)[1,c("year","MPCAID", "Pollutant", "lat","long", "SiteId")])
+
+    # Create the popup info 
+    # Paste all years together that a site was active
+    # Paste all pollutants sampled at a site together
+    for(i in 1:nrow(d2)) {d2$year[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$year)),collapse=", ")
+                    d2$Pollutant[i] <- paste(levels(factor(filter(toxics, SiteId ==d2[i,"SiteId"])$Pollutant)), collapse=", ") }
+
+    # Format the popup for each site in the list
+    d2 <- mutate(d2, popup = paste0("<b>", SiteId,
+                "</b><br><hr style='height:3px; width:446px; margin:0; margin-bottom:5px; padding:0; background-color: #004F98; border-color: #004F98;'/>",
+                "<b style='color:#5db0ff;'>",
+                "Years Active: ",
+                "</b> <code style='display:block;  width:443px; border:0; white-space:pre-wrap; background-color:black; color:white;'>",
+                year,
+                "</code><br> <b style='color:#5db0ff;'>",
+                "Pollutants: ",
+                "</b><code style='display:block; width:443px; border:0; white-space:pre-wrap; background-color: black; color: white;'>",
+                Pollutant, "</code> <p><b style='color:#5db0ff;'>",
+                "Coordinates: </b>",
+                lat, ", ", long, "</p>") )
+
+# Convert the data frame into a list, saving each row as a new item in the list
+dat_list <- lapply(1:nrow(d2), function(x) as.list(d2[x,]))
+
+mMap <- Leaflet$new()
+
+# Set the background map to black and white from "Stamen Maps"
+mMap$tileLayer(provider = "Stamen.TonerLite", maxZoom=16)
+
+#onEachFeature = '#! function(feature, layer){layer.bindLabel(feature.properties.label, {maxWidth: 0} ) .addTo(map)} !#',
+
+# Assign a marker to each (lat,long) and attach popup text
+mMap$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
+             onEachFeature = "#! function(feature, layer){layer.bindPopup(feature.properties.popup, {minWidth: 450, minHeight:300})} !#",
+             pointToLayer = "#! function(feature, latlng){return L.marker(latlng, {
+             opacity: 0.75, weight: 1, title: feature.properties.SiteId }) } !#" )
+
+# Control the zoom level with a silly formula
+mMap$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = max(6,13+round(-5*(max(c(.35+(max(d2$long)-min(d2$long)),max(d2$lat)-min(d2$lat)))^(1/2.5)))))
+mMapsuppressWarnings(return( mMap))
     
   })
   
