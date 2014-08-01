@@ -222,7 +222,7 @@ risk <- reactive({
     if (is.null(isolate(input$pollutant)) | is.null(dataset2()) | isolate(input$pollutant)== "All") {
       df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
       suppressWarnings(h2 <- hPlot(x="Year", y = "km_mean", type="column", data = df))
-      #h2$addParams(dom = 'barplot')
+      h2$addParams(dom = 'barplot')
       h2$xAxis(title = list(text=""), labels = list(enabled=F), tickLength=0, lineWidth=0)
       h2$yAxis(title = list(text = ""))
       h2$legend(enabled=F)
@@ -263,8 +263,8 @@ risk <- reactive({
       h2$exporting(width=1800, sourceWidth=900, buttons=list(contextButton=list(symbolStrokeWidth=2,text="Print")  ))
     }     
     else {df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
-          suppressWarnings(h2 <- hPlot(x="Monitor Site", y = "Average Concentration", type="column", data = df))
-          #h2$addParams(dom = 'barplot')
+          suppressWarnings(h2 <- hPlot(x="Year", y = "km_mean", type="column", data = df))
+          h2$addParams(dom = 'barplot')
           h2$xAxis(title = list(style=list(fontSize="13px"), text="Year"), type="category", categories = df$Year, min =2002, max=2013)
           h2$yAxis(min = 0, ceiling = 10, title = list(style=list(fontSize="13px"), text = paste(isolate(input$pollutant), "Concentration (ug/m3)")))
           h2$legend(enabled=F)
@@ -321,7 +321,7 @@ risk <- reactive({
       h1$exporting(width=1800, sourceWidth=900, buttons=list(contextButton=list(symbolStrokeWidth=2,text="Print")  ))
     }     
     else {df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
-          suppressWarnings(h1 <- hPlot(x="Year", y = "Average Concentration", type="line", data = df))
+          suppressWarnings(h1 <- hPlot(x="Year", y = "km_mean", type="line", data = df))
           h1$addParams(dom = 'trends')
           h1$xAxis(title = list(style=list(fontSize="13px"), text="Year"), type="category", categories = df$Year, min =2002, max=2013)
           h1$yAxis(min = 0, ceiling = 10, title = list(style=list(fontSize="13px"), text = paste(isolate(input$pollutant), "Concentration (ug/m3)")))
