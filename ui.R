@@ -1,4 +1,4 @@
-#Create chart, map, and summary of chosen Air Toxics data,  ui.R
+# ui.R to chart, map, and summarize chosen Air Toxics data in Minnesota
 library(shiny)
 library(dplyr)
 library(rCharts)
