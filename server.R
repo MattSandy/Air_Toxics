@@ -391,7 +391,7 @@ mMap$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
 
 # Control the zoom level with a silly formula
 mMap$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = max(6,13+round(-5*(max(c(.35+(max(d2$long)-min(d2$long)),max(d2$lat)-min(d2$lat)))^(1/2.5)))))
-suppressWarnings(return( mMap))
+suppressWarnings(return(mMap))
     
   })
   
