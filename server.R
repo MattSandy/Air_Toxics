@@ -198,7 +198,6 @@ risk <- reactive({
       map$tileLayer(provider = "Stamen.TonerLite", maxZoom=16)
       map$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
                   onEachFeature = '#! function(feature, layer){layer.bindPopup(feature.properties.popup)} !#',
-                  #onEachFeature = '#! function(feature, layer){layer.setOpacity('0.5') } !#',
                   pointToLayer =  "#! function(feature, latlng){return L.circleMarker(latlng, {
                   radius: 11, fillColor: feature.properties.fillColor || 'grey',    
                   color: '#000', weight: 1, fillOpacity: 0.87, title: feature.properties.SiteId }) } !#")
@@ -240,7 +239,6 @@ risk <- reactive({
       bar2$Boot_UCL  <- as.numeric(bar2$Boot_UCL)
       bar2$Conc <- signif(bar2$Conc, digits=3)
       bar2$Boot_UCL <- signif(bar2$Boot_UCL, digits=3)
-      #h1 <- hPlot(x="SiteId", y = "Conc", type="column", data = bar2 %.% group_by(SiteId), group="year")
       bar2<-arrange(bar2,year, MPCAID)
       h2 <- Highcharts$new()
       if(input$time=="km_mean") h2$colors(c('#2f7ed8', '#8bbc21', '#EAC530', '#1aadce', '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a','#0d233a','grey'))
