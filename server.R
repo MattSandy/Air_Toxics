@@ -288,9 +288,9 @@ risk <- reactive({
     }
     else if(nrow(dataset2())>0){
       trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
-      counts <- group_by(trend2, MPCAID) %.% summarise(count = length(MPCAID))
-      if(length(unique(trend2$MPCAID)) > 7) trend2 <- trend2[trend2$MPCAID %in% counts[counts$count >1,1], ] 
-      if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
+      #counts <- group_by(trend2, MPCAID) %.% summarise(count = length(MPCAID))
+      #if(length(unique(trend2$MPCAID)) > 7) trend2 <- trend2[trend2$MPCAID %in% counts[counts$count >1,1], ] 
+      #if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
       names(trend2)[4] <- "Conc"
       trend2<- arrange(trend2,year)
       for(years in unique(trend2$year)) { for(site in unique(trend2$SiteId)) {if(nrow(filter(trend2,SiteId==site, year == years))<1) trend2<-rbind(trend2, c(years, filter(trend2,SiteId==site)$MPCAID[1], site, -1,-1)) }}
