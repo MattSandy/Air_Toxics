@@ -1,4 +1,4 @@
-# ui.R to chart, map, and summarize chosen Air Toxics data in Minnesota
+#Create chart, map, and summary of chosen Air Toxics data,  ui.R
 library(shiny)
 library(dplyr)
 library(rCharts)
@@ -22,13 +22,13 @@ shinyUI(fluidPage(
   ),
   
   #Web Title
-  title = "Monitor Data 2002-2013: Air Toxics",
+  title = "Air Toxics Monitor Data: 2002-2013",
   
   #Page Header
   
   fluidRow(
     column(12,
-           h1("Air Toxics Data 2002-2013", style="margin-left:9px; margin-top:15px; font-size:36px; margin-bottom:0px; padding-bottom:5px;")
+           h1("Air Toxics Summary: 2002-2013", style="margin-left:9px; margin-top:15px; font-size:36px; margin-bottom:0px; padding-bottom:5px;")
            #hr(class="hr")
            
     )),
@@ -44,7 +44,7 @@ shinyUI(fluidPage(
            br(),
            h4("Pollutant:", style="margin-botom:3px;"), uiOutput("pollutants"),
            h4("Years:", style="margin-botom:10px; margin-top: 8px;"), uiOutput("yearRange")
-                
+           
     ),
     column(3,
            br(),   
@@ -55,8 +55,8 @@ shinyUI(fluidPage(
            br(),           
            h4("Summary:", style="margin-botom:-6px;"), 
            div(style="margin-top:-4px;", radioButtons("time", " ",
-                        list("Annual Average" = "km_mean",
-                             "2nd Highest Value" = "Second_Highest"))),  
+                                                      list("Annual Average" = "km_mean",
+                                                           "2nd Highest Value" = "Second_Highest"))),  
            h4("Download:", style="margin-botom:-4px; margin-top: 0px; padding-bottom:-8px;"),
            downloadButton("download", label = "Save Data", class = "download")
     )
@@ -97,26 +97,26 @@ shinyUI(fluidPage(
     
     
     tabsetPanel(id ="tabs1",
-      tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")), showOutput("map", "leaflet"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
-      tabPanel("Trends", showOutput("trends", "highcharts")),
-      tabPanel("Bar Charts", showOutput("barplot", "highcharts"), p("Error bars extend to the 95% upper confidence limit of the mean and were calculated with the Bootstrap method.")),
-      tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table")),
-      tabPanel("Monitors", h5(textOutput("titleM"), id="title"), showOutput("monitorMap", "leaflet"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
-      tabPanel("About", 
-                     #   h5("Overview", id="title"), p("This tool presents ambient air data collected from MPCA's monitoring network.", id ="para"),br(),
-                     #   h5("Monitoring Network", id="title"), p(""),br(),
-                     #   h5("Sample Collection", id="title"), p(""),br(),
-                     #   h5("Health Standards", id="title"), p(""),br(),
-                         h5("Summary Values", id="title"), p("The averages presented in this tool were calculated using the Kaplan-Meier method in order to account for samples with concentrations below the detection limit.", id ="para"), br(),
-                         h5("Contacts", id="title"), p("For more information please contact Cassie McMahon at Cassie.Mcmahon@state.mn.us or Dorian Kvale at Dorian.Kvale@state.mn.us", id ="para"),br(),
-                     #   h5("Current Data", id="title"), p(""),br(),
-                     #   h5("Limitations", id="title"), p(""),br(),
-               tags$style('.title {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}'))
-      
+                tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")), showOutput("map", "leaflet"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
+                tabPanel("Trends", showOutput("trends", "highcharts")),
+                tabPanel("Bar Charts", showOutput("barplot", "highcharts"), p("*Error bars extend to the 95% upper confidence limit of the mean calculated using the Bootstrap method.")),
+                tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table")),
+                tabPanel("Monitors", h5(textOutput("titleM"), id="title"), showOutput("monitorMap", "leaflet"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
+                tabPanel("About", 
+                         #   h5("Overview", id="title"), p("This tool presents ambient air data collected from MPCA's monitoring network.", id ="para"),br(),
+                         #   h5("Monitoring Network", id="title"), p(""),br(),
+                         #   h5("Sample Collection", id="title"), p(""),br(),
+                         #   h5("Health Standards", id="title"), p(""),br(),
+                         h5("Summary Values", id="title"), p("The averages presented in this tool are calculated using the Kaplan-Meier method to account for samples with concentrations below the detection limit.", id ="para"), br(),
+                         h5("Contacts", id="title"), p("For more information please contact Dorian Kvale at Dorian.Kvale@state.mn.us or Cassie McMahon at Cassie.Mcmahon@state.mn.us.", id ="para"),br(),
+                         #   h5("Current Data", id="title"), p(""),br(),
+                         #   h5("Limitations", id="title"), p(""),br(),
+                         tags$style('.title {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}'))
+                
     ),
     
     fluidRow(column(12, hr(class="hr") ))
-)
+  )
 ))
-    
-  
+
+
