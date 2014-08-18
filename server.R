@@ -4,7 +4,7 @@ library(dplyr)
 library(rCharts)
 
 # shinyapps::configureApp("Air_Toxic", size="large")
-#options("digits"= 4)
+
 #saveRDS(toxics, file="toxics_2014.rds")
 #toxics <- readRDS(file="toxics_2014.rds")
 
