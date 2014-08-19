@@ -56,7 +56,7 @@ shinyUI(fluidPage(
            h4("Summary:", style="margin-botom:-6px;"), 
            div(style="margin-top:-4px;", radioButtons("time", " ",
                                                       list("Annual Average" = "km_mean",
-                                                           "2nd Highest Value" = "Second_Highest"))),  
+                                                           "Annual Maximum" = "Annual_Max"))),  
            h4("Download:", style="margin-botom:-4px; margin-top: 0px; padding-bottom:-8px;"),
            downloadButton("download", label = "Save Data", class = "download")
     )
