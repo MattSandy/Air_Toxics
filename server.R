@@ -6,10 +6,13 @@ library(rCharts)
 # shinyapps::configureApp("Air_Toxic", size="large")
 
 #saveRDS(toxics, file="toxics_2014.rds")
-#toxics <- readRDS(file="toxics_2014.rds")
+toxics <- readRDS(file="toxics_2014.rds")
+#toxics<- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=6000 )
+#write.csv(toxics, file="toxics_2014.csv", row.names=F)
+hbvs <- readRDS(file="hbvs_2014.rds")
+#hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
+#saveRDS(hbvs, file="hbvs_2014.rds")
 
-toxics<- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=6000 )
-hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
 pol_list <-levels(as.factor(toxics$Pollutant))
 
 #*# Server logic to summarize the selected dataset and map the monitor network
@@ -103,7 +106,7 @@ shinyServer(function(input, output, session) {
   #Get minimum risk value
   risk.1 <- reactive({ 
     if(is.null(get_cas())) return(NULL)
-    if(input$time == "Second_Highest"){min_risk = hbvs[hbvs$CAS == get_cas(),4][1]}
+    if(input$time == "Annual_Max"){min_risk = hbvs[hbvs$CAS == get_cas(),4][1]}
     else{min_risk = suppressWarnings(min(hbvs[hbvs$CAS == get_cas(),c(6,7)], na.rm=T))}
     ifelse(min_risk == Inf | is.na(min_risk), 0, min_risk)
   })
@@ -112,7 +115,7 @@ shinyServer(function(input, output, session) {
   risk.type <- reactive({
     
     if(is.null(risk.1())) return(NULL)
-    if(input$time == "Second_Highest") ifelse( risk.1() != 0, return("Acute Hazard Index of 1 at "), return("          No risk value available"))
+    if(input$time == "Annual_Max") ifelse( risk.1() != 0, return("Acute Hazard Index of 1 at "), return("          No risk value available"))
     if(risk.1() != 0) {
       type = suppressWarnings(which.min(hbvs[hbvs$CAS == get_cas(),c(6,7)] ))
       ifelse(type == 1, "Cancer Risk of 1 in 100,000 at ", "Acute Hazard Index of 1 at ")
@@ -131,7 +134,7 @@ shinyServer(function(input, output, session) {
   #Hide risk value if 1.5X above sample measurments 
   risk.is <- reactive({
     if(is.null(risk.1())) return(0)
-    if(input$time == "Second_Highest") { ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()[,"Second_Highest"])) ), 0, 1)}
+    if(input$time == "Annual_Max") { ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()[,"Annual_Max"])) ), 0, 1)}
     else {ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()$Boot_UCL)) ), 0, 1)}
     
   })
@@ -344,10 +347,10 @@ shinyServer(function(input, output, session) {
     data$long=as.character(round(data$long, digits=3))
     options("digits"= 2)
     names(data)[c(19,1,3,7:9,13,14,21,17:18,10:12,15 )] <- c("Site_Id","AQS_ID","Year","Region","Pollutant","CAS","Second_Max","Average","UCL_95","Lat","Long", "Parameter", "Detects", "Detects_pct", "StdDev")
-    if(is.null(input$allData) | input$allData == F) data[ ,c(19,22,3,8,14,21,13,23)] 
+    if(is.null(input$allData) | input$allData == F) data[ ,c(19,22,3,24,14,21,13,23)] 
     else {options("digits"= 3)
           data <- left_join(data, hbvs[,c(1,4:7)], by="CAS")
-          data[,c(19,22,3,8,9,14,21,13,15,11,12,7,23,17,18,24:27)] }
+          data[,c(19,22,3,28,8,9,14,21,13,15,11,12,7,23,17,18,24:27)] }
   }, options= list(bLengthChange=T, aLengthMenu = c(5, 10, 25, 50), iDisplayLength = 10, bFilter=T))
   
   
@@ -402,4 +405,3 @@ shinyServer(function(input, output, session) {
   
   
 })
-
