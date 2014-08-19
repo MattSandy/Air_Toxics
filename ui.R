@@ -107,7 +107,12 @@ shinyUI(fluidPage(
                          #   h5("Monitoring Network", id="title"), p(""),br(),
                          #   h5("Sample Collection", id="title"), p(""),br(),
                          #   h5("Health Standards", id="title"), p(""),br(),
-                         h5("Summary Values", id="title"), p("The averages presented in this tool are calculated using the Kaplan-Meier method to account for samples with concentrations below the detection limit.", id ="para"), br(),
+                         h5("Summary Values", id="title"), p("The averages presented 
+                            in this tool are calculated using the Kaplan-Meier method
+                            to account for samples with concentrations below the detection limit.
+                            The annual maximum is an estimation of the maximum 1 hour concentration of a
+                            pollutant and is calculated by taking the second highest 24 hour
+                            value and multiplying it by five.", id ="para"), br(),
                          h5("Contacts", id="title"), p("For more information please contact Dorian Kvale at Dorian.Kvale@state.mn.us or Cassie McMahon at Cassie.Mcmahon@state.mn.us.", id ="para"),br(),
                          #   h5("Current Data", id="title"), p(""),br(),
                          #   h5("Limitations", id="title"), p(""),br(),
