@@ -99,7 +99,7 @@ shinyUI(fluidPage(
     tabsetPanel(id ="tabs1",
                 tabPanel("Maps", h5(textOutput("title")), h5(textOutput("risk")), showOutput("map", "leaflet"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
                 tabPanel("Trends", showOutput("trends", "highcharts")),
-                tabPanel("Bar Charts", showOutput("barplot", "highcharts"), p("*Error bars extend to the 95% upper confidence limit of the mean calculated using the Bootstrap method.")),
+                tabPanel("Bar Charts", showOutput("barplot", "highcharts"), p("*Error bars extend to the 95% upper confidence limit of the mean.")),
                 tabPanel("Data Table", checkboxInput("allData", label = "Show All Columns", value = F), dataTableOutput("table")),
                 tabPanel("Monitors", h5(textOutput("titleM"), id="title"), showOutput("monitorMap", "leaflet"), tags$style('.leaflet {min-width: 99.9%; width:99.9%; padding:0; height: 405px; margin:0;}')),
                 tabPanel("About", 
