@@ -134,7 +134,7 @@ shinyServer(function(input, output, session) {
   #Hide risk value if 1.5X above sample measurments 
   risk.is <- reactive({
     if(is.null(risk.1())) return(0)
-    if(input$time == "Annual_Max") { ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()[,"Annual_Max"])) ), 0, 1)}
+    if(input$time == "Annual_Max") { ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(c(dataset2()$Design_Value, 0), na.rm=T))), 0, 1)}
     else {ifelse( ( risk.1() == 0 | risk.1() > 1.5*suppressWarnings(max(dataset2()$Boot_UCL)) ), 0, 1)}
     
   })
