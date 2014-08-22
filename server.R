@@ -201,7 +201,6 @@ shinyServer(function(input, output, session) {
       map$tileLayer(provider = "Stamen.TonerLite", maxZoom=16)
       map$geoJson(toGeoJSON(dat_list, lat = 'lat', lon = 'long' ),
                   onEachFeature = '#! function(feature, layer){layer.bindPopup(feature.properties.popup)} !#',
-                  #onEachFeature = '#! function(feature, layer){layer.setOpacity('0.5') } !#',
                   pointToLayer =  "#! function(feature, latlng){return L.circleMarker(latlng, {
                   radius: 11, fillColor: feature.properties.fillColor || 'grey',    
                   color: '#000', weight: 1, fillOpacity: 0.87, title: feature.properties.SiteId }) } !#")
@@ -254,7 +253,7 @@ shinyServer(function(input, output, session) {
       if(risk.is()>0) h2$yAxis(plotLines=list(list(zIndex=5,value=risk.1(), shadow=T, color="darkred", width=2, dashStyle="dash", shadow=T,label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min=0, max=1.0001*max(c(bar2$Conc,bar2$Boot_UCL),na.rm=T), title = list(style=list(fontSize="13px", color="#333333"), spacingTop=5, text="Concentration (ug/m3)"))
       else h2$yAxis(min=0, max=1.0001*max(c(bar2$Conc,bar2$Boot_UCL),na.rm=T), title = list(style=list(fontSize="13px", color="#333333"), spacingTop=5, text="Concentration (ug/m3)"))
       h2$chart(zoomType='x', height=450, spacingLeft=6, spacingRight=4, spacingTop=0, spacingBottom=10, marginBottom=150, marginRight=5)
-      h2$legend(margin=10, redraw=F, symbolWidth=25, y=45, symbolPadding=5, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10)
+      h2$legend(margin=23, redraw=F, symbolWidth=25, y=45, symbolPadding=5, align="center", verticalAlign="top", floating=F, borderWidth=0, padding=10)
       bar2[bar2==-1] <- NULL
       for(years in unique(bar2$year)) {h2$series(data = filter(bar2, year == years)$Conc, name =years, type="column") 
                                        if(input$time=="km_mean") h2$series(type="errorbar", color="grey", data =  lapply(1:nrow(filter(bar2,  year == years)), function(x) as.vector(unlist(filter(bar2,  year == years)[x,c("Conc", "Boot_UCL")]))), name=paste(years, "95% UCL"), tooltip=list(pointFormat=paste(years, " 95%UCL: ", "<b>{point.high}</b>", sep="")  )  )  
@@ -318,7 +317,7 @@ shinyServer(function(input, output, session) {
       if(risk.is()>0) h1$yAxis(plotLines=list(list(zIndex=5, visible=T, value=risk.1(), color="darkred", width=2, dashStyle="dash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min=0.99*min(c(trend2$Conc,risk.1()), na.rm=T), max = 1.01*max(trend2$Conc,na.rm=T), ceiling = 100, title = list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
       else h1$yAxis(min=0.99*min(trend2$Conc, na.rm=T), max=1.01*max(trend2$Conc, na.rm=T), ceiling=100, title=list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
       h1$chart(zoomType='x', height=450, spacingLeft=5, spacingRight=4, spacingTop=0, marginBottom=46, marginRight=4)
-      h1$legend(itemWidth= 177, margin=10, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, paddingBottom=5, width=890)
+      h1$legend(itemWidth=188, margin=23, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, width=1128)
       h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
       h1$subtitle(y=38,x=-1, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text= paste("- - ", risk(), sep=""))
       h1$plotOptions(series=list(shadow=T), pointStart= 2002, pointInterval=1)
