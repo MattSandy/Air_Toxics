@@ -181,7 +181,7 @@ shinyServer(function(input, output, session) {
       names(d2)[6] <- "Conc"
       if(input$time == "km_mean") d2 <- group_by(d2, MPCAID) %.% mutate(avg = mean.default(Conc)) %.% filter(year == year[1])
       else d2 <- group_by(d2, MPCAID) %.% mutate(avg = max(Conc)) %.% filter(year == year[1])
-      nums <- length(unique(d2$avg))
+      nums <- length(unique(d2$SiteId))
       labs <- if(input$time == "km_mean") c("#081D58","#0088EE", "#44BBCC","#99DDBB","#d9f0a3","#f7fcb9") else c("#67001f","#810f7c", "#88419d","#8c96c6","#9ebcda","#e0ecf4")  
       cuts <- quantile(c(d2$avg), c(.01,.25,.5,.8,.998))
       options(digits=7)
@@ -191,7 +191,7 @@ shinyServer(function(input, output, session) {
       d2$avg = signif(d2$avg,3)
       dat_list <- lapply(1:nrow(d2), function(x) d2[x,])
       dat_list <- lapply(dat_list, function(station){within(station, {
-        fillColor = cut(avg, breaks = cuts2, right=F, labels = colorRampPalette(rev(labs[1:5]))(30), include.lowest=T)
+        fillColor= if(nums==1){labs[2]} else {cut(avg, breaks=cuts2, right=F, labels=colorRampPalette(rev(labs[1:5]))(30), include.lowest=T)}
         popup = iconv(whisker::whisker.render(
           '<b>{{SiteId}}</b><br><hr style="height:2px; margin:0; margin-bottom:5px; padding:0; background-color: {{fillColor}}; border-color: {{fillColor}};"/>
           Concentration  =  <b><code style="border:0; background-color: white; color: black;"> {{avg}} ug/m3 </b></code> <br>
@@ -205,9 +205,8 @@ shinyServer(function(input, output, session) {
                   pointToLayer =  "#! function(feature, latlng){return L.circleMarker(latlng, {
                   radius: 11, fillColor: feature.properties.fillColor || 'grey',    
                   color: '#000', weight: 1, fillOpacity: 0.87, title: feature.properties.SiteId }) } !#")
-      map$legend(position = 'topleft', colors = if(nums==1){
-        cut(d2$avg*c(1.01,.9993), breaks = cuts2, right=F, labels = colorRampPalette(rev(labs[1:5]))(30), include.lowest=T) }
-        else {labs[1:5]}, labels = as.vector(if(nums==1) c(signif(d2$avg*c(1.017,.989),2)) else c(rev(signif(cuts,2)))))
+      map$legend(position = 'topleft', colors=if(nums==1){list(labs[2])}
+         else {labs[1:5]}, labels=as.vector(if(nums==1) list(signif(d2$avg)) else c(rev(signif(cuts,2)))))
       map$setView(c(mean(range(d2$lat)), mean(range(d2$long))), zoom = max(6, 13+round(-5*(max(c(.35+(max(d2$long)-min(d2$long)),max(d2$lat)-min(d2$lat)))^(1/2.5)))))
     }
     else{          
