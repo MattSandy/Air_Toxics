@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
   #Download Button
   output$download <- downloadHandler(
     
-    filename = function() { paste("MPCA_Air_Data_2002_2014.csv", sep="") },
+    filename = function() { paste("MPCA_Air_Toxics_Data_2002-2013.csv", sep="") },
     content = function(con) {
       toxics = left_join(toxics, hbvs[,c(1,4:7)], by="CAS")
       write.csv(toxics, con, row.names=F)}
