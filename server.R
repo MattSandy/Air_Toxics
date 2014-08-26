@@ -264,7 +264,7 @@ shinyServer(function(input, output, session) {
       h2$plotOptions(animation = F, series=list(shadow=F, groupPadding=.13))
       h2$exporting(width=1800, sourceWidth=900, buttons=list(contextButton=list(symbolStrokeWidth=2,text="Print")  ))
     }     
-    else {df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
+    else {df <- data.frame(Annual_Mean=rep(NA, 1+input$years[2]-input$years[1]), Year=seq(from=input$years[1], to=input$years[2], length.out= 1+input$years[2]-input$years[1]))
           suppressWarnings(h2 <- hPlot(x="Year", y = "km_mean", type="column", data = df))
           h2$addParams(dom = 'barplot')
           h2$xAxis(title = list(style=list(fontSize="13px"), text="Year"), type="category", categories = df$Year, min =2002, max=2013)
@@ -323,7 +323,7 @@ shinyServer(function(input, output, session) {
       h1$plotOptions(series=list(shadow=T), pointStart= 2002, pointInterval=1)
       h1$exporting(width=1800, sourceWidth=900, buttons=list(contextButton=list(symbolStrokeWidth=2,text="Print")  ))
     }     
-    else {df <- data.frame(km_mean = rep(NA,12), Year= seq(from=2002, to=2013))
+    else {df <- data.frame(Annual_Mean=rep(NA, 1+input$years[2]-input$years[1]), Year=seq(from=input$years[1], to=input$years[2], length.out= 1+input$years[2]-input$years[1]))
           suppressWarnings(h1 <- hPlot(x="Year", y = "km_mean", type="line", data = df))
           h1$addParams(dom = 'trends')
           h1$xAxis(title = list(style=list(fontSize="13px"), text="Year"), type="category", categories = df$Year, min =2002, max=2013)
