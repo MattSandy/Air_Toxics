@@ -5,20 +5,7 @@ library(rCharts)
 
 shinyUI(fluidPage(
   tags$head(    
-    tags$style(type='text/css', ".select  { max-width: 190px; }"),
-    tags$style(type='text/css', ".jslider { max-width: 250px; }"),
-    tags$style(type='text/css', ".row-fluid { margin:auto; max-width: 100%; margin-top: 0px; margin-bottom:0; z-index:1; padding-top: 0px; padding-bottom: 0px; }"),
-    tags$style(type='text/css', ".span4 { max-width: 250px; margin:0; min-width: 150px; }"),
-    tags$style(type='text/css', ".span2 { max-width: 170px; margin:0; min-width: 150px; padding-left: 10px;}"),
-    tags$style(type='text/css', ".span3 { max-width: 220px; padding-top: 0px; padding-left: 10px; margin-left: 0px;  margin-top: 0px; }"),
-    tags$style(type='text/css', ".span12 { margin-left: 1px; padding-left: 5px; margin-bottom: -5px; margin-top: 0px; padding-top:0px; padding-bottom: 0px;}"),
-    tags$style(type='text/css', ".hr { padding: 0px; max-height: 3px; margin-left: auto; margin-right: auto; width: 100%; height: 3px; margin-top: 10px; background-color: #D8D8D8; color: #D8D8D8; }"),
-    tags$style(type='text/css', ".h1 { margin-left:5px; margin-bottom:0px; padding-bottom:0; font-size:26px;  }"),
-    tags$style(type='text/css', ".h4 { margin-top: 0; padding-top:0; }"),
-    tags$style(type='text/css', ".download { width: 82%; height: 19px; max-width: 100px; color: #0000FF; padding-top: 4px; margin:0px; margin-top: 1px; margin-bottom:0px}"),
-    tags$style(type='text/css', ".container-fluid { margin-top: 0; margin-bottom: 0; padding-bottom:0; padding-top: 0; }"),
-    tags$style(type='text/css', ".shiny-html-output { margin: auto; margin-top: 0;  padding-top:0; }")
-    
+        tags$link(rel="stylesheet", type="text/css", href="bootstrap.css"),
   ),
   
   #Web Title
@@ -72,27 +59,7 @@ shinyUI(fluidPage(
   # Show 3 tabs: chart, map and summary of the dataset
   mainPanel(
     tags$head(
-      tags$style(type='text/css', ".span8 { margin: 0; margin-bottom:0;  margin-top: 0; padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', ".tabbable {  margin: 0;  padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', ".tabbable tabs-above {  margin:0; padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', ".nav nav-tabs { margin: 0; padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', ".tab-content {  margin:0; margin-top:-9px;  padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', ".tab-pane {  margin:0; padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', ".tab-pane active {  margin: 0; padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', "#tab-3964-1. {margin: 0; padding: 0px; width: 100%; }"),
-      tags$style(type='text/css', ".checkbox { zindex:5; float=F; margin-top: -5px; margin-left: 9px; padding-bottom: 0px; margin-bottom: 25px;"),
-      tags$style(type='text/css', ".shiny-datatable-output {margin-left: 5px; margin-right:5px; margin-top: 5px; padding-top: 0px; padding-right:0px; width: 99%;}"),
-      tags$style(type='text/css', ".span { margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
-      tags$style(type='text/css', ".span6 { height:0px; margin-top: 0 px; margin-bottom: 0px; padding:0px; }"),
-      tags$style(type='text/css', ".active { margin:auto; margin-top: 0px; margin-bottom: 0px; padding:0px; }"),
-      #tags$style(type='text/css', "#map {margin:0;  padding: 0px; margin-top: 0px; height:405px; width: 100%; }"),
-      tags$style(type='text/css', "#title {padding:0;  font-size:17px;  padding-left:12px; margin:0;  margin-top: 1px;}"),
-      tags$style(type='text/css', "#para {padding:0;  font-size:14.5px; margin:0;  margin-left:12px; margin-top: 4px; margin-right: 14px;}"),
-      tags$style(type='text/css', "#risk {color:darkred; font-size:14.5px; font-weight:550; padding:0;  padding-left:12px; margin:0; margin-top: 4px; margin-bottom: 2px;}"),
-      tags$style(type='text/css', ".h5 { margin:0; padding-top:0;  }"),
-      tags$style(type='text/css', "#trends {margin: 0; margin-top: 1px; padding:0; width: 99.5%; height: 460px;}"),
-      tags$style(type='text/css', "#barplot {margin: 0; margin-top: 1px; padding:0; width: 99.5%; height: 460px;}")
-      #tags$script(src="http://code.highcharts.com/modules/exporting.js")
+        tags$link(rel="stylesheet", type="text/css", href="mainPanel.css"),
     ),
     
     
