@@ -3,15 +3,14 @@ library(shiny)
 library(dplyr)
 library(rCharts)
 
-# shinyapps::configureApp("Air_Toxic", size="large")
+# shinyapps::configureApp("Air_Toxic", size="medium")
 
 #saveRDS(toxics, file="toxics_2014.rds")
 #toxics <- readRDS(file="toxics_2014.rds")
 toxics<- read.csv(file="toxics_2014.csv", header=T, stringsAsFactors=F, nrows=6000 )
-#write.csv(toxics, file="toxics_2014.csv", row.names=F)
+
 #hbvs <- readRDS(file="hbvs_2014.rds")
 hbvs <- read.csv(file="hbvs.csv", header=T, stringsAsFactors=F, nrows=70 )
-#saveRDS(hbvs, file="hbvs_2014.rds")
 
 pol_list <-levels(as.factor(toxics$Pollutant))
 
@@ -264,7 +263,7 @@ shinyServer(function(input, output, session) {
             h2$plotOptions(animation = F, series=list(shadow=F, groupPadding=.13))
             h2$exporting(width=1800, sourceWidth=900, buttons=list(contextButton=list(symbolStrokeWidth=2,text="Print")  ))
         }     
-        else {df <- data.frame(Annual_Mean=rep(NA, 1+input$years[2]-input$years[1]), Year=seq(from=input$years[1], to=input$years[2], length.out= 1+input$years[2]-input$years[1]))
+        else {df <- data.frame(km_mean = rep(NA,12), Year= rep(NA,12))
               suppressWarnings(h2 <- hPlot(x="Year", y = "km_mean", type="column", data = df))
               h2$addParams(dom = 'barplot')
               h2$xAxis(title = list(style=list(fontSize="13px"), text="Year"), type="category", categories = df$Year, min =2002, max=2013)
@@ -323,7 +322,7 @@ shinyServer(function(input, output, session) {
             h1$plotOptions(series=list(shadow=T), pointStart= 2002, pointInterval=1)
             h1$exporting(width=1800, sourceWidth=900, buttons=list(contextButton=list(symbolStrokeWidth=2,text="Print")  ))
         }     
-        else {df <- data.frame(Annual_Mean=rep(NA, 1+input$years[2]-input$years[1]), Year=seq(from=input$years[1], to=input$years[2], length.out= 1+input$years[2]-input$years[1]))
+        else {df <- data.frame(km_mean = rep(NA,12), Year= rep(NA,12))
               suppressWarnings(h1 <- hPlot(x="Year", y = "km_mean", type="line", data = df))
               h1$addParams(dom = 'trends')
               h1$xAxis(title = list(style=list(fontSize="13px"), text="Year"), type="category", categories = df$Year, min =2002, max=2013)
@@ -344,11 +343,11 @@ shinyServer(function(input, output, session) {
         data$lat=as.character(round(data$lat, digits=3))
         data$long=as.character(round(data$long, digits=3))
         options("digits"= 2)
-        names(data)[c(19,1,3,7:9,13,14,21,17:18,10:12,15 )] <- c("Site_Id","AQS_ID","Year","Region","Pollutant","CAS","Second_Max","Average","UCL_95","Lat","Long", "Parameter", "Detects", "Detects_pct", "StdDev")
-        if(is.null(input$allData) | input$allData == F) data[ ,c(19,22,3,24,14,21,13,23)] 
+        names(data)[c(19,1,3,7:9,13,24,14,21,17:18,10:12,15 )] <- c("Site_Id","AQS_ID","Year","Region","Pollutant","CAS","Second_Max","Hourly_Max","Average","UCL_95","Lat","Long", "Parameter", "Detects", "Detects_pct", "StdDev")
+        if(is.null(input$allData) | input$allData == F) data[ ,c(19,22,23,3,14,21,24)] 
         else {options("digits"= 3)
               data <- left_join(data, hbvs[,c(1,4:7)], by="CAS")
-              data[,c(19,22,3,28,8,9,14,21,13,15,11,12,7,23,17,18,24:27)] }
+              data[,c(19,22,3,8,9,14,21,24,13,15,11,12,7,23,17,18,25,27,28)] }
     }, options= list(bLengthChange=T, aLengthMenu = c(5, 10, 25, 50), iDisplayLength = 10, bFilter=T))
     
     
