@@ -1,9 +1,7 @@
 Air Toxics
 ==========
 
-
 **To run from R:**  
-
 You'll need these pacakges
 
     require("dplyr")  
@@ -11,7 +9,7 @@ You'll need these pacakges
     devtools::install_github("shiny", "rstudio")  
     devtools::install_github('rCharts', 'ramnathv')  
 
-Then use `runGitHub`  
+Then use `runGitHub` from `devtools`  
 
     library(shiny)  
     runGitHub("Air_Toxics", "dKvale")
