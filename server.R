@@ -117,7 +117,7 @@ shinyServer(function(input, output, session) {
         if(input$time == "Annual_Max") ifelse( risk.1() != 0, return("Acute Hazard Index of 1 at "), return("No risk value available"))
         if(risk.1() != 0) {
             type = suppressWarnings(which.min(hbvs[hbvs$CAS == get_cas(),c(6,7)] ))
-            ifelse(type == 1, "Cancer Risk of 1 in 100,000 at ", "Acute Hazard Index of 1 at ")
+            ifelse(type == 1, "Cancer Risk of 1 in 100,000 at ", "Hazard Index of 1 at ")
         } else {"          No risk value available"}
         
     })
