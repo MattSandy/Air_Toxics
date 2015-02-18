@@ -50,7 +50,7 @@ shinyServer(function(input, output, session) {
             if(newvalue[1] == slider[1] & newvalue[2] == slider[2]) value_has_not_changed[["x"]] <-  isolate(value_has_not_changed[["x"]]) + 1
         }
         
-        sliderInput("years", "", min=ranges[1], max= ifelse(ranges[1]==ranges[2],ranges[2]+1,ranges[2]), value=c(newvalue[1], ifelse(ranges[1]==ranges[2],newvalue[2]+1, newvalue[2])),  format="####", step=1)
+        sliderInput("years", "", min=ranges[1], max= ifelse(ranges[1]==ranges[2],ranges[2]+1,ranges[2]), value=c(newvalue[1], ifelse(ranges[1]==ranges[2],newvalue[2]+1, newvalue[2])),  sep= "", step=1)
         
     })
     
@@ -117,7 +117,7 @@ shinyServer(function(input, output, session) {
         if(input$time == "Annual_Max") ifelse( risk.1() != 0, return("Acute Hazard Index of 1 at "), return("No risk value available"))
         if(risk.1() != 0) {
             type = suppressWarnings(which.min(hbvs[hbvs$CAS == get_cas(),c(6,7)] ))
-            ifelse(type == 1, "Cancer Risk of 1 in 100,000 at ", "Hazard Index of 1 at ")
+            ifelse(type == 1, "Longterm Cancer Risk of 1 in 100,000 at ", "Longterm Hazard Index of 1 at ")
         } else {"          No risk value available"}
         
     })
@@ -178,8 +178,8 @@ shinyServer(function(input, output, session) {
         else if(nrow(dataset2())>0 & isolate(input$pollutant)!="All"){
             d2 <- dataset2()[,c("year","MPCAID", "lat","long", "SiteId", input$time)]
             names(d2)[6] <- "Conc"
-            if(input$time == "km_mean") d2 <- group_by(d2, MPCAID) %.% mutate(avg = mean.default(Conc)) %.% filter(year == year[1])
-            else d2 <- group_by(d2, MPCAID) %.% mutate(avg = max(Conc)) %.% filter(year == year[1])
+            if(input$time == "km_mean") d2 <- group_by(d2, MPCAID) %>% mutate(avg = mean.default(Conc)) %>% filter(year == year[1])
+            else d2 <- group_by(d2, MPCAID) %>% mutate(avg = max(Conc)) %>% filter(year == year[1])
             nums <- length(unique(d2$SiteId))
             labs <- if(input$time == "km_mean") c("#081D58","#0088EE", "#44BBCC","#99DDBB","#d9f0a3","#f7fcb9") else c("#67001f","#810f7c", "#88419d","#8c96c6","#9ebcda","#e0ecf4")  
             cuts <- quantile(c(d2$avg), c(.01,.25,.5,.8,.998))
@@ -240,7 +240,7 @@ shinyServer(function(input, output, session) {
             bar2$Boot_UCL  <- as.numeric(bar2$Boot_UCL)
             bar2$Conc <- signif(bar2$Conc, digits=3)
             bar2$Boot_UCL <- signif(bar2$Boot_UCL, digits=3)
-            #h1 <- hPlot(x="SiteId", y = "Conc", type="column", data = bar2 %.% group_by(SiteId), group="year")
+            #h1 <- hPlot(x="SiteId", y = "Conc", type="column", data = bar2 %>% group_by(SiteId), group="year")
             bar2 <- arrange(bar2,year, MPCAID)
             h2   <- Highcharts$new()
             if(input$time=="km_mean") h2$colors(c('#2f7ed8', '#8bbc21', '#EAC530', '#1aadce', '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a','#0d233a','grey'))
@@ -291,7 +291,7 @@ shinyServer(function(input, output, session) {
         }
         else if(nrow(dataset2())>0 & isolate(input$pollutant)!="All"){
             trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
-            #counts <- group_by(trend2, MPCAID) %.% summarise(count = length(MPCAID))
+            #counts <- group_by(trend2, MPCAID) %>% summarise(count = length(MPCAID))
             #if(length(unique(trend2$MPCAID)) > 7) trend2 <- trend2[trend2$MPCAID %in% counts[counts$count >1,1], ] 
             #if(length(unique(trend2$MPCAID)) < 2) trend2 <- dataset2()[,c("year","MPCAID", "SiteId", input$time)]
             names(trend2)[4] <- "Conc"
@@ -306,7 +306,7 @@ shinyServer(function(input, output, session) {
             #h1 <- hPlot(x="year", y = "Conc", type="line", data = trend2, group="SiteId")
             x<-1
             for(site in unique(trend2$SiteId)) {h1$series(data = filter(trend2, SiteId==site)$Conc, name=site, type="spline", connectNulls=T, dashStyle=c("line","shortdot","dot")[x%%4+1])
-                                                x<-x+1}                         
+            x<-x+1}                         
             h1$addParams(dom = 'trends')
             if(input$time=="km_mean") h1$colors(c('#2f7ed8', '#8bbc21', '#EAC530', '#1aadce', '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a','#0d233a','grey'))
             else h1$colors(c('#7cb5ec', '#90ed7d', '#f7a35c', '#8085e9','#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1','#434348'))
@@ -316,7 +316,7 @@ shinyServer(function(input, output, session) {
             if(risk.is()>0) h1$yAxis(plotLines=list(list(zIndex=5, visible=T, value=risk.1(), color="darkred", width=2, dashStyle="dash", label=list(align="top",verticalAlign="top", text="Health Standard", style=list(fontWeight="bold", color="#333333")))), min=0.99*min(c(trend2$Conc,risk.1()), na.rm=T), max = 1.01*max(trend2$Conc,na.rm=T), ceiling = 100, title = list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
             else h1$yAxis(min=0.99*min(trend2$Conc, na.rm=T), max=1.01*max(trend2$Conc, na.rm=T), ceiling=100, title=list(style=list(fontSize="13px", color="#333333"), marginBottom=5, text = "Concentration (ug/m3)"))
             h1$chart(zoomType='x', height=450, spacingLeft=5, spacingRight=4, spacingTop=0, marginBottom=46, marginRight=4)
-            h1$legend(itemWidth=188, margin=23, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="center", verticalAlign="top", floating=F, borderWidth=0, width=1128)
+            h1$legend(itemWidth=168, redraw=F, symbolWidth=20, symbolPadding=5, x=40, y=42, align="Center", verticalAlign="top", floating=F, borderWidth=0, width=928)
             h1$title(margin=35, style= list(fontWeight="bold", color="black"), text = titlez()) 
             h1$subtitle(y=38,x=-1, style= list(color="darkred", fontSize="13.5px", fontWeight="bold"), text= paste("- - ", risk(), sep=""))
             h1$plotOptions(series=list(shadow=T), pointStart= 2002, pointInterval=1)
@@ -339,16 +339,16 @@ shinyServer(function(input, output, session) {
     
     output$table = renderDataTable({
         if(is.null(input$siteid)) return(NULL)
-        data<-dataset2()
-        data$lat=as.character(round(data$lat, digits=3))
-        data$long=as.character(round(data$long, digits=3))
+        data <- dataset2()
+        data$lat <-as.character(round(data$lat, digits=3))
+        data$long <- as.character(round(data$long, digits=3))
         options("digits"= 2)
         names(data)[c(19,1,3,7:9,13,24,14,21,17:18,10:12,15 )] <- c("Site_Id","AQS_ID","Year","Region","Pollutant","CAS","Second_Max","Hourly_Max","Average","UCL_95","Lat","Long", "Parameter", "Detects", "Detects_pct", "StdDev")
         if(is.null(input$allData) | input$allData == F) data[ ,c(19,22,23,3,14,21,24)] 
         else {options("digits"= 3)
               data <- left_join(data, hbvs[,c(1,4:7)], by="CAS")
               data[,c(19,22,3,8,9,14,21,24,13,15,11,12,7,23,17,18,25,27,28)] }
-    }, options= list(bLengthChange=T, aLengthMenu = c(5, 10, 25, 50), iDisplayLength = 10, bFilter=T))
+    }, options= list(lengthChange=T, lengthMenu = c(5, 10, 25, 50), pageLength = 10, searching=T))
     
     
     output$monitorMap <- renderMap({
