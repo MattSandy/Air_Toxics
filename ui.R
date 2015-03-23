@@ -34,14 +34,14 @@ shinyUI(fluidPage(
         
     ),
     
-    #Web Title
-    title = "Air Toxics Monitor Data: 2002-2013 [beta]",
+     #Web Title
+    title = "Air Toxics Monitor Data: 2002-2013[beta]",
     
     #Page Header
     
     fluidRow(
         column(12,
-               h1("Air Toxics Summary: 2002-2013 [beta]", style="margin-left:9px; margin-top:15px; font-size:36px; margin-bottom:0px; padding-bottom:5px;")
+               h1("(draft) Air Toxics Summary: 2002-2013", style="margin-left:9px; margin-top:15px; font-size:36px; margin-bottom:0px; padding-bottom:5px;")
                #hr(class="hr")
                
         )),
@@ -50,24 +50,27 @@ shinyUI(fluidPage(
     fluidRow(
         column(2,
                #https://drive.google.com/file/d/0B9Ub5HCtyNmkME55b1FwU3l1NkE/edit?usp=sharing
-               img(src="https://cloud.githubusercontent.com/assets/6283030/4280095/0091e9c4-3d29-11e4-9daf-3d935c60a380.png", style = "margin:auto; margin-top:10px; padding-top:10px; width:100%; height:80%; max-width:200px; max-height:190px; ")
+               img(src="https://cloud.githubusercontent.com/assets/6283030/6784538/3802de68-d14e-11e4-8469-50e62df90740.png", style = "margin:auto; padding-right:10px; margin-top:30px; padding-top:25px; width:108%; height:180px; max-width:200px; max-height:190px; ")
         ),
         
         column(3,
-               h4("Pollutant", style="margin-botom:-15px; padding-bottom:-15px;"), uiOutput("pollutants"),
-               h4("Years", style="margin-botom:-5px; margin-top: 1px;"), uiOutput("yearRange")
+               br(),
+               h4("Pollutant:", style="margin-botom:3px;"), uiOutput("pollutants"),
+               h4("Years:", style="margin-botom:10px; margin-top: 4px;"), uiOutput("yearRange")
                
         ),
-        column(3,  
-               h4("Region", style="margin-botom:-5px;"), uiOutput("regions"),
-               h4("Site ID", style="margin-top: 1px; margin-botom:-5px;"), uiOutput("siteids")
+        column(3,
+               br(),   
+               h4("Region:", style="margin-botom:3px;"), uiOutput("regions"),
+               h4("Site ID:", style="margin-top: 8px; margin-botom:3px;"), uiOutput("siteids")
         ),
-        column(3,          
-               h4("Summary", style="margin-botom:-6px;"), 
-               div(style="margin-top:-4px;", radioButtons("time", " ",
+        column(3,
+               br(),           
+               h4("Summary:", style="margin-botom:-18px;"), 
+               div(style="margin-top:-13px;", radioButtons("time", " ",
                                                           list("Annual Average" = "km_mean",
                                                                "Annual Maximum" = "Annual_Max"))),  
-               h4("Download", style="margin-botom:0px; margin-top: 0px; padding-bottom:0px;"),
+               h4("Download:", style="margin-botom:0px; margin-top: 15px; padding-bottom:0px;"),
                downloadButton("download", label = "Save Data", class = "download")
         )
         
