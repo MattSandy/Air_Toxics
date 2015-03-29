@@ -2,7 +2,7 @@ Air Toxics
 ==========
 
 **To run from R:**  
-You'll need these pacakges
+Grab these pacakges
 
     require("dplyr")  
     require("devtools")  
