@@ -1,0 +1,346 @@
+---
+title:  "Annual air toxics summary script"
+author: "MPCA - EAO"
+result: "summary csv for Tableau"
+last_update: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    toc: yes
+    theme: readable
+    highlight: tango
+---
+
+<style type="text/css">
+body, td {font-size: 18px;}
+code.r {font-size: 15px;}
+pre {font-size: 14px} 
+font-size: 16px;
+</style>
+
+---  
+
+> __Purpose:__ Using the EnvStats and dplyr package this script summarizes annual air monitoring results containing censored measurements below the method detection limit (MDL). 
+>  
+> __Output:__ The prepared summary includes the MLE mean, the estimated hourly maximum, and the 95% Bootstrapped UCL. The output is formatted for MPCA's 'Air Toxics Data Explorer'.
+         
+> __Future options:__  
+>    - Multiple summary methods  
+>    - Temporal comparisons    
+>    - Tests for time series shifts     
+  
+>  __Notes__  
+>    - 2014 data has zero duplicate samples _(2/4/2014)_  
+  
+   
+---  
+
+```{r, message=F, tidy=T}
+# Load packages
+library(RODBC); library(dplyr); library(readr); library(tidyr)
+```
+
+## Parameter options                 
+```{r, message=F}
+setwd("X:/Programs/Air_Quality_Programs/Air Monitoring Data and Risks/5 Air Toxics Web Application/R Code to Summarize Daily Data/1. Annual Summary")
+
+input_years <- 2002:2014         # Monitoring years 2002:2015 available
+
+# Data quality requirements
+Minimum_Detect_Percent <- 20     # Reporting requires 20% detection, enter as 20
+Minimum_Samples        <- 45     # Reporting requires 75% completeness (45 samples)
+Minimum_Detects        <- 6      # Default is 6 detections (20% of 45 samples is 9)
+Minimum_Unique_Values  <- 2      # MLE requires at least 2 unique detected values
+
+# Treatment of duplicate measurements at the same monitoring site
+# Duplicates don't appear in 2014 data pull, might be treated upstream in ACCESS?
+Duplicate_Samples      <- "Max"  # Use the greater result (only option)
+Multiple_Detect_Limits <- "Min"  # Use the lower detection limit (only option)
+Duplicate_POCs         <- "Mean" # Mean is only option
+Multiple_Param_Codes   <- "Mean" # Mean is only option
+
+# Treatment of concentrations reported as NA or NULL
+Null_Value_Treatment   <- "Drop" # Dropping Null values is currently only option
+
+# Outliers
+Outlier_Value_Method   <- NA      # Outliers are identified upstream of this summary
+
+# Chromium VI estimation
+# The `Chromium_IHB_Multiplier` (1 / 10% = 10) is multiplied by the IHB for ChromVI to estimate the IHB for unspeciated Chromium
+Chromium_IHB_Multiplier <- 1 / 0.10   # Assumes 10% ChromVI present in sampled Chromium (ref: )
+
+# 1-Hour maximum estimation
+Hour_Max_Multiplier    <- 10    # Value is multiplied by the daily maximums defined by 'Day_Max_used4_Hour_Max'
+
+# The daily maximums used to estimate the 1-Hour maximum concentration 
+Day_Max_used4_Hour_Max <- "1st & 2nd high" # 1st and 2nd high are the only options
+
+# Annual mean and 95% conf. interval
+Mean_Method            <- "MLE (Normal Dist.)"  # MLE is only built in option
+Low_Threshold_for_MLE  <- 0.75   # The fraction of the MDL to use as the minimum cutoff for the Mean
+Boot_Repeats           <- 3500
+Random_Seed            <- 27
+
+# Output options
+Run_Analysis           <- TRUE
+Save_Results           <- TRUE
+Attach_Earlier_Years   <- FALSE  # Enter filename (ex. 'Summary_AirToxics_Tableau.csv') to combine results or enter 'FALSE'
+Non_Report_Metals      <- c("Copper", "Mercury", "Aluminum")
+Non_Report_Organics    <- c("Acrolein - Unverified", "Naphthalene", 
+                            "2-Proponal", "Acetone", "Ethyl Alcohol", 
+                            "Methyl Methacrylate")
+# Option to add: c("Acrolein - Unverified", "Naphthalene")
+```
+
+## Data cleaning
+
+###  Load Air Toxics sampling data                   
+```{r message=FALSE, eval=Run_Analysis}
+# Connect to Air Toxics Access db
+Tox_connect <- odbcConnectAccess2007("X:/Programs/Air_Quality_Programs/Air Monitoring Data and Risks/5 Air Toxics Web Application/Data for Processing/AirToxicsResults.accdb")
+
+# Get data from a table or query in the database
+data <- sqlQuery(Tox_connect, paste("exec [Results]"), stringsAsFactors=F)
+
+odbcCloseAll()
+```
+
+
+###  Prep the data table
+```{r message=FALSE, eval=Run_Analysis}
+names(data) <- c("AQS_ID", "POC", "Param_Code", "Date","Concentration",
+                 "Null_Data_Code", "MDL", "Pollutant", "Year", "CAS")
+
+data$Units <- "ug/m3"
+
+# Filter to relevant years
+data <- filter(data, Year %in% input_years)
+
+# Remove factors
+data$Pollutant <- as.character(data$Pollutant)
+
+# Remove NULL values
+data <- data[!is.na(data$Concentration), ]
+
+# Set date as character type
+data$Date <- as.character(data$Date)
+```
+
+
+### Duplicate samples 
+  >  Defaults to greatest value of dupilcates  
+  >  If values are identical, defaults to lowest detection limit  
+
+```{r, message=FALSE, eval=Run_Analysis, warning=FALSE}
+# Add unique key to each row
+data$Key <- 1:nrow(data)
+
+# Create unique ID for each site/poc/param code/day combination
+data$Unique <- paste(data$AQS_ID, data$POC, data$Param_Code, data$Date, sep="_")
+
+# Label duplicate samples
+data <- group_by(data, Unique) %>% mutate(Duplicate = n() > 1)
+
+# Create duplicate table
+dupes <- filter(data, Duplicate == T)
+
+# Within duplicates, select highest concentration and lowest detection limit
+dupes <- group_by(dupes, Unique) %>% 
+         arrange(-Concentration, MDL) %>% 
+         filter(Key == Key[1])
+
+# Remove Unique IDs with duplicates from data
+data <- filter(data, !Duplicate)
+
+# Attach the selected duplicates with highest result and lowest detection limit
+data <- rbind(data, dupes)
+```
+
+
+### Units correction Metals/TSP concentrations (no longer applies)
+> See metals conversion folder
+
+
+## Annual summary calculations
+> 1. Run EnvStats MLE function for annual mean 
+> 2. Bootstrap means to calculate the 95% UCL 
+> 3. Estimate the 1-Hour Max from daily maximum
+
+```{r, message=F, eval=Run_Analysis}
+# Load MLE function and summary stats
+source("MLE_Stats_EnvStats.R")
+
+tox_summary <- envStats.summary(data             = data,
+                                SITEID           = "AQS_ID", 
+                                Results          = "Concentration",
+                                MDL              = "MDL", 
+                                Year             = "Year",
+                                Date             = "Date",
+                                Pollutant        = "Pollutant",
+                                Param_Code       = "Param_Code",
+                                POC              = "POC",
+                                Percent_Cutoff   = Minimum_Detect_Percent,
+                                Minimum_Samples  = Minimum_Samples,
+                                Minimum_Detects  = Minimum_Detects,
+                                Boot_Repeats     = Boot_Repeats,
+                                seed             = Random_Seed,
+                                Minimum_Unique_Values  = Minimum_Unique_Values,
+                                Low_Threshold_for_MLE  = Low_Threshold_for_MLE,
+                                Hour_Max_Multiplier    = Hour_Max_Multiplier)
+```
+
+
+## Combine results with previous years
+```{r, message=F, eval=Run_Analysis}
+
+# Ungroup
+tox_summary <- ungroup(tox_summary)
+
+# Column names
+names(tox_summary)[1] <- "AQS_ID"
+
+# Remove unreported fields
+tox_summary$SubDL_Mean         <- NULL
+tox_summary$SubDL_UCL95        <- NULL
+tox_summary$Hour_Max_by2ndHigh <- NULL
+tox_summary$sameValues         <- NULL
+tox_summary$Censored           <- NULL
+tox_summary$GroupID            <- NULL
+
+if(is.character(Attach_Earlier_Years)) {
+  
+  past_years <- read.csv(paste0("Results\\", Attach_Earlier_Years), stringsAsFactors = F)
+  
+  # Remove updated years from the past data
+  past_years <- filter(past_years, !Year %in% unique(tox_summary$Year))
+  
+  # Attach past data after dropping risk values, they will be recalculated using current IHBs
+  tox_summary <- rbind(tox_summary, past_years[ , 1:20])
+} 
+
+```
+
+## Prepare results for Tableau
+
+### Attach health benchmarks
+```{r, message=F, eval=Run_Analysis}
+# Connect to Access db
+risk_connect <- odbcConnectAccess2007("X:\\Programs\\Air_Quality_Programs\\Air Monitoring Data and Risks\\4 Concentration to Risk Estimate Database\\Air Toxics Risks Estimates.accdb")
+
+# Get data table or query in the database
+Risk_vals <- sqlQuery(risk_connect, paste("select * from [Toxicity]"), stringsAsFactors=F)
+
+Params <- sqlQuery(risk_connect, paste("select * from [Parameter Info]"), stringsAsFactors=F)
+
+odbcCloseAll()
+
+# Clean white space & special characters
+Risk_vals[ , 4] <- str_trim(gsub("\xca","", Risk_vals[ , 4]))
+Risk_vals[ , 5] <- str_trim(gsub("\xca","", Risk_vals[ , 5]))
+
+names(Params)[3] <- "CAS"
+
+# Join Param Code to risk values
+HBVs <- left_join(Params, Risk_vals[ , c(4,8,16,21)])[ , -c(1,5:7)]
+
+names(HBVs)[c(1,3:6)] <- c("Param_Code", "Parameter_Name","Acute_NonCancer_HBV", "Longterm_Cancer_HBV", "Longterm_NonCancer_HBV")
+
+HBVs <- arrange(HBVs, Parameter_Name)
+
+tox_summary <- left_join(tox_summary, HBVs[!(duplicated(HBVs$CAS)), -c(1,3)])
+
+# Adjust for Chrom VI estimate
+tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_Cancer_HBV    <- tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_Cancer_HBV * Chromium_IHB_Multiplier
+
+tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_NonCancer_HBV <- tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_NonCancer_HBV * Chromium_IHB_Multiplier
+
+# Add risk comparison columns
+tox_summary <- group_by(tox_summary, row_number()) %>% 
+               mutate(Above_Acute_HBV   = Hour_Max_byMaxDay > Acute_NonCancer_HBV, 
+                      Above_Chronic_HBV = UCL95 > min(c(Longterm_NonCancer_HBV, Longterm_Cancer_HBV, 10E7), na.rm=T))
+
+tox_summary$row_number <- NULL
+tox_summary <- ungroup(tox_summary)
+
+```
+
+
+###  Attach monitoring site information
+```{r, message=F, eval=Run_Analysis}
+sites <- read.csv("Site_Info_extended.csv", stringsAsFactors=F)
+
+tox_summary <- left_join(tox_summary, sites, by = "AQS_ID")
+
+tox_summary$lat  <- as.character(tox_summary$lat)
+tox_summary$long <- as.character(tox_summary$long)
+```
+
+### Results summary
+```{r, message=F, eval=Run_Analysis}
+library(knitr)
+
+# Pollutant list
+pollutants <- unique(tox_summary$Pollutant)
+
+print("Pollutants included in results: ")
+print(paste(pollutants, sep=", "))
+
+# Pollutants with concentrations above HBV
+above_HBV <- filter(tox_summary, Above_Acute_HBV | Above_Chronic_HBV)
+kable(above_HBV, 'html', align = 'c')
+
+# Detected groups with too few unique values
+not_unique <- filter(tox_summary, 
+                     uniQ <  Minimum_Unique_Values, 
+                     Count_Detect >= Minimum_Detects)
+kable(not_unique, 'html', align = 'c')
+
+# Groups not meeting completeness requirements
+not_complete <- filter(tox_summary, Count_Sampled < Minimum_Samples)
+kable(not_complete, 'html', align = 'c')
+
+paste0(100*round(nrow(not_complete)/nrow(tox_summary), 2), "% of groups were disqualified.")
+
+cat("Sites with less than 45 samples: \n\t",
+    paste(sort(unique(not_complete$AQS_ID)), "\t"))
+
+# Write CSV
+#if(Save_Results){
+#  write.csv(tox_summary, paste0("Results/Summary_AirToxics_",  min(tox_summary$Year), "-", max(tox_summary$Year),".csv", row.names=F))
+#}
+```
+
+### Refine table and set significant digits
+
+```{r, message=F, eval=Run_Analysis}
+# Remove non-reporting pollutants
+non_report <- c(Non_Report_Metals, Non_Report_Organics)
+  
+tox_summary <- filter(tox_summary, !Pollutant %in% non_report)
+
+# Add fields
+tox_summary$Detected   <- NA
+# tox_summary$Date <- paste0("01-01-", tox_summary$Year)
+
+# Set significant digits
+tox_summary$Pct_Detect <- round(tox_summary$Pct_Detect, digits=0)
+
+# Round listed columns to 2 digits
+for(i in c("Longterm_NonCancer_HBV","Acute_NonCancer_HBV","Longterm_Cancer_HBV","Mean","MDL","UCL95","Day_Max","Day_2ndHigh","Hour_Max_byMaxDay")) {  # Hour_Max_by2ndHigh
+  
+  tox_summary[ , i] <- signif(tox_summary[ , i], digits = 2)
+  
+}
+
+#names(tox_summary)[grep("uniQ", names(tox_summary))] <- "Unique_Values"
+
+if(Save_Results){
+  write.csv(tox_summary, 
+            paste0("Results/Summary_AirToxics_Tableau_", 
+                   min(tox_summary$Year), "-", max(tox_summary$Year),".csv"), 
+            row.names=F)
+}
+
+```
+
+
+
