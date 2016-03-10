@@ -129,13 +129,11 @@ envStats.summary <- function( data                  = data,
   
   data <- group_by(data, GroupID) %>% mutate(sameValues = sum(duplicated(Concentration[!Censored])))
   
-  # Filter groups that don't meet data quality checks
+  # Create filter based on data quality checks
   ND_filter <- (data$Count_Sampled < Minimum_Samples) | 
                (data$Count_Detect  < Minimum_Detects) | 
                (data$Pct_Detect    < Percent_Cutoff)  | 
                (data$uniQ          < Minimum_Unique_Values)
-  
-  data_annual <- data[!ND_filter, ]
   
   #==============================================================================#
   #   Calculate annual averages:
@@ -149,10 +147,25 @@ envStats.summary <- function( data                  = data,
   #    mutate(KM_Mean= if (Count_Censored[1] < 1) mean(Concentration)
   #        else enparCensored(Concentration, as.logical(Censored))$parameters[[1]])
   
+  # Calculate alternative mean methods
+  data <- group_by(data, GroupID) %>% 
+          mutate(Raw_Value_Mean = mean(Raw_Values), 
+                 SubDL_Mean = mean(Concentration))
+  
+  # Set random seed for bootstrap sampling
+  set.seed(seed)
+  
+  # Run boot function to get UCL95 for alternative mean methods
+  data <- group_by(data, GroupID) %>% 
+          mutate(Raw_UCL95 = sort(replicate(Boot_Repeats, mean(sample(Raw_Values, replace=T))))[Boot_Repeats*.95+1],
+                 SubDL_UCL95 = sort(replicate(Boot_Repeats, mean(sample(Concentration, replace=T))))[Boot_Repeats*.95+1])
+  
+  # Filter data that don't meet annual summary reporting requirements
+  data_annual <- data[!ND_filter, ]
+  
+  # Calculate reported MLE mean
   data_annual <- group_by(data_annual, GroupID) %>% 
-                 mutate(Raw_Value_Mean = mean(Raw_Values), 
-                        SubDL_Mean = mean(Concentration), 
-                        Mean = if(Count_Censored[1] < 1) mean(Concentration)
+                 mutate(Mean = if(Count_Censored[1] < 1) mean(Concentration)
                                else enormCensored(Concentration, as.logical(Censored), method="impute.w.mle", ci=F, lb.impute=MDL[1] * Low_Threshold_for_MLE)$parameters[[1]])
   
   #==============================================================================#
@@ -161,9 +174,6 @@ envStats.summary <- function( data                  = data,
   
   # Load Bootstrapping MLE function
   source("bootEnvStats.R")
-  
-  # Set random seed for bootstrap sampling
-  set.seed(seed)
   
   # Get group details for bootstrap progress updates
   N_of_Groups <- length(unique(data_annual$GroupID))
@@ -184,9 +194,6 @@ envStats.summary <- function( data                  = data,
                                                   Status[1],
                                                   Low_Threshold_for_MLE)))
   
-  # Run boot function for alternative detection limit substition method
-  data_annual <- group_by(data_annual, GroupID) %>% 
-                 mutate(SubDL_UCL95 = sort(replicate(Boot_Repeats, mean(sample(Concentration, replace=T))))[Boot_Repeats*.95+1])
   
   # Option to use EnvStats built in Conf. Interval function
   # data2 <- group_by(data2, GroupID) %>% mutate(UCL95=if (Count_Censored[1] < 1) sort(replicate(Boot_Repeats, mean(sample(Concentration, replace=T))))[Boot_Repeats*.95+1] else enormCensored(Concentration, Censored, method="impute.w.mle", ci=T, lb.impute=MDL[1]*.75, ci.method="bootstrap", n.bootstraps=Boot_Repeats, seed=27, conf.level=.90)$interval$limits[[2]])
@@ -198,9 +205,11 @@ envStats.summary <- function( data                  = data,
   
   data_annual <- data_annual[!duplicated(data_annual$GroupID), ]
   
-  data <- left_join(data, data_annual[ , c("GroupID", "Mean", "UCL95", "SubDL_Mean", "SubDL_UCL95")])
-  data$Concentration <- NULL
-  #data$Detected      <- NULL
+  data <- left_join(data, data_annual[ , c("GroupID", "Mean", "UCL95")])
+  data$Concentration    <- NULL
+  data$Raw_Values       <- NULL
+  data$Censored         <- NULL
+  data$Detected         <- NULL
   #data$Date <- NULL
   
   options(warn = 1)
