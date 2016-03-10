@@ -30,7 +30,6 @@ font-size: 16px;
   
 >  __Notes__  
 >    - 2014 data has zero duplicate samples _(2/4/2014)_  
-  
    
 ---  
 
@@ -43,12 +42,12 @@ library(RODBC); library(dplyr); library(readr); library(tidyr)
 ```{r, message=F}
 setwd("X:/Programs/Air_Quality_Programs/Air Monitoring Data and Risks/5 Air Toxics Web Application/R Code to Summarize Daily Data/1. Annual Summary")
 
-input_years <- 2002:2014         # Monitoring years 2002:2015 available
+input_years <- 2014         # Monitoring years 2002:2015 available
 
 # Data quality requirements
-Minimum_Detect_Percent <- 20     # Reporting requires 20% detection, enter as 20
-Minimum_Samples        <- 45     # Reporting requires 75% completeness (45 samples)
-Minimum_Detects        <- 6      # Default is 6 detections (20% of 45 samples is 9)
+Minimum_Detect_Percent <- 0     # Reporting requires 20% detection, enter as 20
+Minimum_Samples        <- 2     # Reporting requires 75% completeness (45 samples)
+Minimum_Detects        <- 0      # Default is 6 detections (20% of 45 samples is 9)
 Minimum_Unique_Values  <- 2      # MLE requires at least 2 unique detected values
 
 # Treatment of duplicate measurements at the same monitoring site
@@ -84,10 +83,10 @@ Random_Seed            <- 27
 Run_Analysis           <- TRUE
 Save_Results           <- TRUE
 Attach_Earlier_Years   <- FALSE  # Enter filename (ex. 'Summary_AirToxics_Tableau.csv') to combine results or enter 'FALSE'
-Non_Report_Metals      <- c("Copper", "Mercury", "Aluminum")
-Non_Report_Organics    <- c("Acrolein - Unverified", "Naphthalene", 
-                            "2-Proponal", "Acetone", "Ethyl Alcohol", 
-                            "Methyl Methacrylate")
+
+Non_Report_Metals      <- c()  #c("Copper", "Mercury", "Aluminum")
+Non_Report_Organics    <- c()  #c("Acrolein - Unverified", "Naphthalene","2-Proponal", "Acetone", "Ethyl Alcohol", "Methyl Methacrylate")
+
 # Option to add: c("Acrolein - Unverified", "Naphthalene")
 ```
 
@@ -114,6 +113,11 @@ data$Units <- "ug/m3"
 
 # Filter to relevant years
 data <- filter(data, Year %in% input_years)
+
+# Remove non-reporting pollutants
+non_report <- c(Non_Report_Metals, Non_Report_Organics)
+  
+data  <- filter(data, !Pollutant %in% non_report)
 
 # Remove factors
 data$Pollutant <- as.character(data$Pollutant)
@@ -163,7 +167,7 @@ data <- rbind(data, dupes)
 ## Annual summary calculations
 > 1. Run EnvStats MLE function for annual mean 
 > 2. Bootstrap means to calculate the 95% UCL 
-> 3. Estimate the 1-Hour Max from daily maximum
+> 3. Estimate the acute 1-Hour maximum from 2nd highest 24-hour sample
 
 ```{r, message=F, eval=Run_Analysis}
 # Load MLE function and summary stats
@@ -199,12 +203,10 @@ tox_summary <- ungroup(tox_summary)
 names(tox_summary)[1] <- "AQS_ID"
 
 # Remove unreported fields
-tox_summary$SubDL_Mean         <- NULL
-tox_summary$SubDL_UCL95        <- NULL
-tox_summary$Hour_Max_by2ndHigh <- NULL
-tox_summary$sameValues         <- NULL
-tox_summary$Censored           <- NULL
-tox_summary$GroupID            <- NULL
+#tox_summary$SubDL_Mean         <- NULL
+#tox_summary$SubDL_UCL95        <- NULL
+#tox_summary$Hour_Max_by2ndHigh <- NULL
+#tox_summary$sameValues         <- NULL
 
 if(is.character(Attach_Earlier_Years)) {
   
@@ -214,7 +216,7 @@ if(is.character(Attach_Earlier_Years)) {
   past_years <- filter(past_years, !Year %in% unique(tox_summary$Year))
   
   # Attach past data after dropping risk values, they will be recalculated using current IHBs
-  tox_summary <- rbind(tox_summary, past_years[ , 1:20])
+  tox_summary <- rbind(tox_summary, past_years[ , names(tox_summary)])
 } 
 
 ```
@@ -246,23 +248,25 @@ names(HBVs)[c(1,3:6)] <- c("Param_Code", "Parameter_Name","Acute_NonCancer_HBV",
 
 HBVs <- arrange(HBVs, Parameter_Name)
 
+# Adjust for Chrom VI estimate
+HBVs <- mutate(HBVs, 
+               Longterm_Cancer_HBV = ifelse(CAS == "7440-47-3",       Longterm_Cancer_HBV * Chromium_IHB_Multiplier, Longterm_Cancer_HBV),
+               Longterm_NonCancer_HBV = ifelse(CAS == "7440-47-3",
+Longterm_NonCancer_HBV * Chromium_IHB_Multiplier, Longterm_NonCancer_HBV))
+
+# Join health benchmarks to air toxics
 tox_summary <- left_join(tox_summary, HBVs[!(duplicated(HBVs$CAS)), -c(1,3)])
 
-# Adjust for Chrom VI estimate
-tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_Cancer_HBV    <- tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_Cancer_HBV * Chromium_IHB_Multiplier
-
-tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_NonCancer_HBV <- tox_summary[tox_summary$Pollutant=="Chromium", ]$Longterm_NonCancer_HBV * Chromium_IHB_Multiplier
 
 # Add risk comparison columns
-tox_summary <- group_by(tox_summary, row_number()) %>% 
-               mutate(Above_Acute_HBV   = Hour_Max_byMaxDay > Acute_NonCancer_HBV, 
-                      Above_Chronic_HBV = UCL95 > min(c(Longterm_NonCancer_HBV, Longterm_Cancer_HBV, 10E7), na.rm=T))
+tox_summary <- group_by(tox_summary, GroupID) %>% 
+               mutate(Above_Acute_HBV   = Hour_Max_by2ndHigh > min(c(Acute_NonCancer_HBV, 10E12), na.rm=T), 
+                      Above_Chronic_HBV = UCL95 > min(c(Longterm_NonCancer_HBV, Longterm_Cancer_HBV, 10E7), na.rm=T)) %>% ungroup()
 
-tox_summary$row_number <- NULL
-tox_summary <- ungroup(tox_summary)
+tox_summary$GroupID <- NULL
+#tox_summary$'row_number()' <- NULL
 
 ```
-
 
 ###  Attach monitoring site information
 ```{r, message=F, eval=Run_Analysis}
@@ -300,35 +304,25 @@ kable(not_complete, 'html', align = 'c')
 
 paste0(100*round(nrow(not_complete)/nrow(tox_summary), 2), "% of groups were disqualified.")
 
-cat("Sites with less than 45 samples: \n\t",
+cat("Sites with less than", Minimum_Samples, "samples: \n\t",
     paste(sort(unique(not_complete$AQS_ID)), "\t"))
 
-# Write CSV
-#if(Save_Results){
-#  write.csv(tox_summary, paste0("Results/Summary_AirToxics_",  min(tox_summary$Year), "-", max(tox_summary$Year),".csv", row.names=F))
-#}
 ```
 
 ### Refine table and set significant digits
 
 ```{r, message=F, eval=Run_Analysis}
-# Remove non-reporting pollutants
-non_report <- c(Non_Report_Metals, Non_Report_Organics)
-  
-tox_summary <- filter(tox_summary, !Pollutant %in% non_report)
 
-# Add fields
-tox_summary$Detected   <- NA
+# Add fields to make Tableau happy
+# tox_summary$Detected   <- NA
 # tox_summary$Date <- paste0("01-01-", tox_summary$Year)
 
 # Set significant digits
-tox_summary$Pct_Detect <- round(tox_summary$Pct_Detect, digits=0)
+tox_summary$Pct_Detect <- round(tox_summary$Pct_Detect, digits = 0)
 
 # Round listed columns to 2 digits
-for(i in c("Longterm_NonCancer_HBV","Acute_NonCancer_HBV","Longterm_Cancer_HBV","Mean","MDL","UCL95","Day_Max","Day_2ndHigh","Hour_Max_byMaxDay")) {  # Hour_Max_by2ndHigh
-  
+for(i in c("Longterm_NonCancer_HBV","Acute_NonCancer_HBV","Longterm_Cancer_HBV","Mean","MDL","UCL95","Day_Max","Day_2ndHigh","Hour_Max_byMaxDay","Hour_Max_by2ndHigh", "SubDL_Mean","SubDL_UCL95","Raw_Value_Mean","Raw_UCL95")) {  
   tox_summary[ , i] <- signif(tox_summary[ , i], digits = 2)
-  
 }
 
 #names(tox_summary)[grep("uniQ", names(tox_summary))] <- "Unique_Values"
@@ -341,6 +335,3 @@ if(Save_Results){
 }
 
 ```
-
-
-
