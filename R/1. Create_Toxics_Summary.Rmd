@@ -42,11 +42,11 @@ library(RODBC); library(dplyr); library(readr); library(tidyr)
 ```{r, message=F}
 setwd("X:/Programs/Air_Quality_Programs/Air Monitoring Data and Risks/5 Air Toxics Web Application/R Code to Summarize Daily Data/1. Annual Summary")
 
-input_years <- 2014         # Monitoring years 2002:2015 available
+input_years <- 2002:2015         # Monitoring years 2002:2015 available
 
 # Data quality requirements
 Minimum_Detect_Percent <- 0     # Reporting requires 20% detection, enter as 20
-Minimum_Samples        <- 2     # Reporting requires 75% completeness (45 samples)
+Minimum_Samples        <- 0     # Reporting requires 75% completeness (45 samples)
 Minimum_Detects        <- 0      # Default is 6 detections (20% of 45 samples is 9)
 Minimum_Unique_Values  <- 2      # MLE requires at least 2 unique detected values
 
@@ -60,9 +60,6 @@ Multiple_Param_Codes   <- "Mean" # Mean is only option
 # Treatment of concentrations reported as NA or NULL
 Null_Value_Treatment   <- "Drop" # Dropping Null values is currently only option
 
-# Outliers
-Outlier_Value_Method   <- NA      # Outliers are identified upstream of this summary
-
 # Chromium VI estimation
 # The `Chromium_IHB_Multiplier` (1 / 10% = 10) is multiplied by the IHB for ChromVI to estimate the IHB for unspeciated Chromium
 Chromium_IHB_Multiplier <- 1 / 0.10   # Assumes 10% ChromVI present in sampled Chromium (ref: )
@@ -71,7 +68,7 @@ Chromium_IHB_Multiplier <- 1 / 0.10   # Assumes 10% ChromVI present in sampled C
 Hour_Max_Multiplier    <- 10    # Value is multiplied by the daily maximums defined by 'Day_Max_used4_Hour_Max'
 
 # The daily maximums used to estimate the 1-Hour maximum concentration 
-Day_Max_used4_Hour_Max <- "1st & 2nd high" # 1st and 2nd high are the only options
+Day_Max_used4_Hour_Max <- "1st & 2nd high" # Not implemented yet.
 
 # Annual mean and 95% conf. interval
 Mean_Method            <- "MLE (Normal Dist.)"  # MLE is only built in option
@@ -317,15 +314,28 @@ cat("Sites with less than", Minimum_Samples, "samples: \n\t",
 # tox_summary$Detected   <- NA
 # tox_summary$Date <- paste0("01-01-", tox_summary$Year)
 
+
 # Set significant digits
 tox_summary$Pct_Detect <- round(tox_summary$Pct_Detect, digits = 0)
 
-# Round listed columns to 2 digits
+# Round listed columns to 3 digits
 for(i in c("Longterm_NonCancer_HBV","Acute_NonCancer_HBV","Longterm_Cancer_HBV","Mean","MDL","UCL95","Day_Max","Day_2ndHigh","Hour_Max_byMaxDay","Hour_Max_by2ndHigh", "SubDL_Mean","SubDL_UCL95","Raw_Value_Mean","Raw_UCL95")) {  
-  tox_summary[ , i] <- signif(tox_summary[ , i], digits = 2)
+  tox_summary[ , i] <- signif(tox_summary[ , i], digits = 3)
 }
 
-#names(tox_summary)[grep("uniQ", names(tox_summary))] <- "Unique_Values"
+options(digits=7)
+
+# Create text columns for Tableau labels
+txt_columns <- c("Acute_NonCancer_HBV","Longterm_Cancer_HBV","Longterm_NonCancer_HBV","Mean","UCL95","MDL")
+
+for(i in txt_columns) { 
+  
+  tox_summary[ , paste0("text_", i)] <- signif(tox_summary[ , i], digits = 2)
+  
+  tox_summary[ , paste0("text_", i)] <- as.character(unlist(tox_summary[ , paste0("text_", i)]))
+}
+
+# names(tox_summary)[grep("uniQ", names(tox_summary))] <- "Unique_Values"
 
 if(Save_Results){
   write.csv(tox_summary, 
@@ -335,3 +345,4 @@ if(Save_Results){
 }
 
 ```
+
